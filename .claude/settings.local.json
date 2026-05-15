@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --no-git)",
+      "PowerShell(Get-ChildItem \"$env:USERPROFILE\\\\.nvm\" -ErrorAction SilentlyContinue | Select-Object Name; Get-ChildItem \"C:\\\\nvm\" -ErrorAction SilentlyContinue | Select-Object Name)",
+      "PowerShell(winget --version 2>&1)",
+      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); node --version; npm --version)",
+      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); \\(Get-Command npm\\).Source)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(Remove-Item \"D:\\\\Github\\\\Study platform\\\\app\\\\page.tsx\" -Force)",
+      "Bash(Remove-Item \"D:\\\\Github\\\\Study platform\\\\app\\\\estudar\\\\page.tsx\" -Force)",
+      "Bash(Remove-Item \"D:\\\\Github\\\\Study platform\\\\app\\\\estudar\\\\[packId]\\\\page.tsx\" -Force)",
+      "Bash(Remove-Item -Recurse -Force \"D:\\\\Github\\\\Study platform\\\\app\\\\pacotes\")",
+      "Bash(npm install *)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;\" + $env:PATH; cd \"D:\\\\Github\\\\Study platform\"; cmd /c \"node_modules\\\\.bin\\\\tsc.cmd --noEmit 2>&1\" | Where-Object { $_ -notmatch \"\\\\.next/types\" } | Select-Object -First 20)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;\" + $env:PATH; cd \"D:\\\\Github\\\\Study platform\"; cmd /c \"npm install server-only 2>&1\")"
+    ]
+  }
+}

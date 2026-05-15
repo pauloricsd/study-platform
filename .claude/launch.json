@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sia-dev",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "start-dev.cmd"],
+      "port": 3000
+    }
+  ]
+}
