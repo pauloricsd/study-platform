@@ -71,6 +71,8 @@ Objetivo: validar fluxos, componentes e experiência sem backend real.
 - [x] **Processamento com IA** — `lib/ai/process-pdf.ts` com OpenAI `gpt-4o` + Structured Outputs; wizard reescrito para usar server actions reais; step 3 com animação cosmética enquanto a chamada à API acontece em paralelo
 - [x] **Persistência de progresso** — `saveTopicProgress` + `saveExerciseResponses`; `onComplete` extendido para passar respostas individuais; ambos salvos em paralelo via `Promise.all`
 - [x] **Correção objetiva** — avaliação client-side usando `correctAnswer` carregado do banco; respostas individuais salvas em `exercise_responses` com `is_correct` e `was_revealed`
+- [x] **Todos os tipos de exercícios** — 12 tipos implementados no motor de estudo e geração IA: `multiple_choice`, `true_false`, `fill_blank`, `open_short`, `numeric`, `multiple_select`, `open_long`, `match_columns`, `ordering`, `text_interpretation`, `explain_required`, `text_production`
+- [x] **Grupos e gerenciamento de alunos** — tabelas `groups`, `group_members`, `invitations`, `group_assignments`; UI admin completa (lista, criação, detalhe); convites por link único (5 dias, uso único); atribuição de pacotes a grupos; aceitação de convite pelo aluno em `/convite/[token]`
 - [ ] **Deploy** — Vercel + Supabase produção
 
 ---
@@ -105,4 +107,4 @@ _Planejada. Ver [PRD seção 14](./01-prd-principal.md#14-roadmap)._
 
 ---
 
-_Última atualização: 2026-05-15 — Fase 1 quase completa: falta apenas deploy_
+_Última atualização: 2026-05-15 — Fase 1 quase completa: todos os 12 tipos de exercícios, grupos e convites implementados; falta apenas deploy_

@@ -141,31 +141,129 @@ export type Database = {
         Row: {
           id: string;
           topic_id: string;
-          type: "multiple_choice" | "true_false" | "fill_blank" | "open_short" | "numeric";
+          type: "multiple_choice" | "true_false" | "fill_blank" | "open_short" | "numeric"
+              | "multiple_select" | "open_long" | "match_columns" | "ordering"
+              | "text_interpretation" | "explain_required" | "text_production";
           statement: string;
           choices: Json | null;
           correct_answer: string;
           explanation: string;
           order: number;
+          passage: string | null;
+          left_items: Json | null;
         };
         Insert: {
           id?: string;
           topic_id: string;
-          type: "multiple_choice" | "true_false" | "fill_blank" | "open_short" | "numeric";
+          type: "multiple_choice" | "true_false" | "fill_blank" | "open_short" | "numeric"
+              | "multiple_select" | "open_long" | "match_columns" | "ordering"
+              | "text_interpretation" | "explain_required" | "text_production";
           statement: string;
           choices?: Json | null;
           correct_answer: string;
           explanation: string;
           order?: number;
+          passage?: string | null;
+          left_items?: Json | null;
         };
         Update: {
-          type?: "multiple_choice" | "true_false" | "fill_blank" | "open_short" | "numeric";
+          type?: "multiple_choice" | "true_false" | "fill_blank" | "open_short" | "numeric"
+               | "multiple_select" | "open_long" | "match_columns" | "ordering"
+               | "text_interpretation" | "explain_required" | "text_production";
           statement?: string;
           choices?: Json | null;
           correct_answer?: string;
           explanation?: string;
           order?: number;
+          passage?: string | null;
+          left_items?: Json | null;
         };
+      };
+      groups: {
+        Row: {
+          id: string;
+          created_by: string | null;
+          name: string;
+          description: string | null;
+          type: "family" | "school" | "classroom" | "tutoring_group" | "subject_group" | "custom";
+          school_name: string | null;
+          grade: string | null;
+          subject: string | null;
+          tags: string[];
+          status: "active" | "inactive";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          created_by?: string | null;
+          name: string;
+          description?: string | null;
+          type?: "family" | "school" | "classroom" | "tutoring_group" | "subject_group" | "custom";
+          school_name?: string | null;
+          grade?: string | null;
+          subject?: string | null;
+          tags?: string[];
+          status?: "active" | "inactive";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          type?: "family" | "school" | "classroom" | "tutoring_group" | "subject_group" | "custom";
+          school_name?: string | null;
+          grade?: string | null;
+          subject?: string | null;
+          tags?: string[];
+          status?: "active" | "inactive";
+          updated_at?: string;
+        };
+      };
+      group_admins: {
+        Row: { group_id: string; admin_id: string; added_at: string };
+        Insert: { group_id: string; admin_id: string; added_at?: string };
+        Update: Record<string, never>;
+      };
+      group_members: {
+        Row: { group_id: string; student_id: string; status: "active" | "inactive"; joined_at: string };
+        Insert: { group_id: string; student_id: string; status?: "active" | "inactive"; joined_at?: string };
+        Update: { status?: "active" | "inactive" };
+      };
+      invitations: {
+        Row: {
+          id: string;
+          token: string;
+          group_id: string;
+          created_by: string | null;
+          email: string | null;
+          student_name: string | null;
+          status: "pending" | "accepted" | "expired" | "revoked";
+          accepted_by: string | null;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          token?: string;
+          group_id: string;
+          created_by?: string | null;
+          email?: string | null;
+          student_name?: string | null;
+          status?: "pending" | "accepted" | "expired" | "revoked";
+          accepted_by?: string | null;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          status?: "pending" | "accepted" | "expired" | "revoked";
+          accepted_by?: string | null;
+        };
+      };
+      group_assignments: {
+        Row: { group_id: string; pack_id: string; assigned_by: string | null; assigned_at: string };
+        Insert: { group_id: string; pack_id: string; assigned_by?: string | null; assigned_at?: string };
+        Update: Record<string, never>;
       };
       topic_progress: {
         Row: {
@@ -265,3 +363,8 @@ export type ExerciseRow = Tables["exercises"]["Row"];
 export type TopicProgressRow = Tables["topic_progress"]["Row"];
 export type ExerciseResponseRow = Tables["exercise_responses"]["Row"];
 export type SourceFileRow = Tables["source_files"]["Row"];
+export type GroupRow = Tables["groups"]["Row"];
+export type GroupMemberRow = Tables["group_members"]["Row"];
+export type GroupAdminRow = Tables["group_admins"]["Row"];
+export type InvitationRow = Tables["invitations"]["Row"];
+export type GroupAssignmentRow = Tables["group_assignments"]["Row"];

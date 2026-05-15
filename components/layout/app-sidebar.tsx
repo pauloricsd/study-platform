@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Users,
+  UsersRound,
   FileText,
   Settings,
   ChevronLeft,
@@ -34,6 +35,7 @@ const adminNav: NavItem[] = [
   { href: "/", label: "Início", icon: LayoutDashboard },
   { href: "/pacotes", label: "Pacotes de Estudo", icon: BookOpen },
   { href: "/alunos", label: "Alunos", icon: Users },
+  { href: "/grupos", label: "Grupos", icon: UsersRound },
   { href: "/materiais", label: "Materiais", icon: FileText },
 ];
 
