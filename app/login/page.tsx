@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { login } from "./actions";
@@ -7,7 +8,7 @@ import Link from "next/link";
 import { Sparkles, Loader2, Mail, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, formAction, isPending] = useActionState(login, null);
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") ?? "";
@@ -134,5 +135,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

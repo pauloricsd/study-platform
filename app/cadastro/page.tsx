@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { signup } from "./actions";
 import { Sparkles, Loader2, Mail, Lock, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function CadastroPage() {
+function CadastroForm() {
   const [state, formAction, isPending] = useActionState(signup, null);
   const searchParams = useSearchParams();
   const role = searchParams.get("role") === "student" ? "student" : "admin";
@@ -167,5 +168,13 @@ export default function CadastroPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function CadastroPage() {
+  return (
+    <Suspense>
+      <CadastroForm />
+    </Suspense>
   );
 }
