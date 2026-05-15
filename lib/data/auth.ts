@@ -9,6 +9,7 @@ export interface Profile {
   grade?: string | null;
   avatarInitials?: string | null;
   avatarColor?: string | null;
+  canSwitchRole?: boolean;
 }
 
 async function db() {
@@ -18,14 +19,15 @@ async function db() {
 
 export async function getCurrentProfile(): Promise<Profile | null> {
   if (!SUPABASE_CONFIGURED) {
-    const s = mockStudents[0];
+    // Mock: use admin profile so the admin UI is visible locally
     return {
-      id: s.id,
-      role: "student",
-      name: s.name,
-      grade: s.grade,
-      avatarInitials: s.avatarInitials,
-      avatarColor: s.color,
+      id: "mock-admin",
+      role: "admin",
+      name: "Professor Mock",
+      grade: null,
+      avatarInitials: "PM",
+      avatarColor: null,
+      canSwitchRole: true, // always allow switching in mock/dev mode
     };
   }
 
@@ -46,5 +48,6 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     grade: data.grade,
     avatarInitials: data.avatar_initials,
     avatarColor: data.avatar_color,
+    canSwitchRole: data.can_switch_role ?? false,
   };
 }

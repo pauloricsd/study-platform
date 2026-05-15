@@ -6,7 +6,10 @@ export interface UserProfileData {
   name: string;
   initials: string;
   color: string | null;
-  role: string;
+  /** The current view role — "admin" when inside admin layout, "student" inside student layout */
+  role: "admin" | "student";
+  /** Whether this account can switch between admin and student views */
+  canSwitchRole: boolean;
 }
 
 const UserProfileContext = createContext<UserProfileData>({
@@ -14,6 +17,7 @@ const UserProfileContext = createContext<UserProfileData>({
   initials: "?",
   color: null,
   role: "admin",
+  canSwitchRole: false,
 });
 
 export function UserProfileProvider({

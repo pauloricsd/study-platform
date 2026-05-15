@@ -8,11 +8,13 @@ function toInitials(name: string) {
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const profile = await getCurrentProfile();
+
   const profileData = {
     name: profile?.name ?? "Usuário",
     initials: profile?.name ? toInitials(profile.name) : "?",
     color: profile?.avatarColor ?? null,
-    role: profile?.role ?? "admin",
+    role: "admin" as const,          // this layout always renders the admin view
+    canSwitchRole: profile?.canSwitchRole ?? false,
   };
 
   return (
