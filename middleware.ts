@@ -12,48 +12,57 @@ const isConfigured =
 export async function middleware(request: NextRequest) {
   if (!isConfigured) return NextResponse.next({ request });
 
-  let supabaseResponse = NextResponse.next({ request });
+  try {
+    let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
+    const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
       },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value)
-        );
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
-        );
-      },
-    },
-  });
+    });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    let user = null;
+    try {
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+    } catch {
+      // Auth service unreachable — treat as unauthenticated
+    }
 
-  const { pathname } = request.nextUrl;
-  const isPublic = pathname === "/login" || pathname.startsWith("/cadastro");
+    const { pathname } = request.nextUrl;
+    const isPublic = pathname === "/login" || pathname.startsWith("/cadastro") || pathname.startsWith("/convite");
 
-  if (!user && !isPublic) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    if (!user && !isPublic) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    if (user && isPublic && !pathname.startsWith("/convite")) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      const dest = profile?.role === "student" ? "/estudar" : "/";
+      return NextResponse.redirect(new URL(dest, request.url));
+    }
+
+    return supabaseResponse;
+  } catch {
+    // Middleware crashed — pass through without auth
+    return NextResponse.next({ request });
   }
-
-  if (user && isPublic) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    const dest = profile?.role === "student" ? "/estudar" : "/";
-    return NextResponse.redirect(new URL(dest, request.url));
-  }
-
-  return supabaseResponse;
 }
 
 export const config = {
