@@ -19,14 +19,15 @@ async function db() {
 
 export async function getCurrentProfile(): Promise<Profile | null> {
   if (!SUPABASE_CONFIGURED) {
-    // Mock: use admin profile so the admin UI is visible locally
+    // Mock: use the first mock student's ID so student-page queries return data
+    const s = mockStudents[0];
     return {
-      id: "mock-admin",
+      id: s.id,
       role: "admin",
-      name: "Professor Mock",
-      grade: null,
-      avatarInitials: "PM",
-      avatarColor: null,
+      name: s.name,
+      grade: s.grade,
+      avatarInitials: s.avatarInitials,
+      avatarColor: s.color,
       canSwitchRole: true, // always allow switching in mock/dev mode
     };
   }

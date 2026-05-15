@@ -73,6 +73,14 @@ Objetivo: validar fluxos, componentes e experiência sem backend real.
 - [x] **Correção objetiva** — avaliação client-side usando `correctAnswer` carregado do banco; respostas individuais salvas em `exercise_responses` com `is_correct` e `was_revealed`
 - [x] **Todos os tipos de exercícios** — 12 tipos implementados no motor de estudo e geração IA: `multiple_choice`, `true_false`, `fill_blank`, `open_short`, `numeric`, `multiple_select`, `open_long`, `match_columns`, `ordering`, `text_interpretation`, `explain_required`, `text_production`
 - [x] **Grupos e gerenciamento de alunos** — tabelas `groups`, `group_members`, `invitations`, `group_assignments`; UI admin completa (lista, criação, detalhe); convites por link único (5 dias, uso único); atribuição de pacotes a grupos; aceitação de convite pelo aluno em `/convite/[token]`
+- [x] **Correção com IA** — `lib/ai/grade-response.ts` com `gpt-4o-mini`; tipos `open_short`, `text_interpretation`, `explain_required` avaliados em tempo real; feedback explicativo na tela de resultados
+- [x] **Autenticação completa** — logout, recuperação de senha (`/recuperar-senha` → `/auth/callback` → `/nova-senha`); `UserMenu` com avatar e dropdown no Topbar
+- [x] **Configurações de conta** (`/configuracoes`) — atualização de nome, troca de senha com re-autenticação, logout; funciona para admin e aluno
+- [x] **Perfil duplo** — coluna `can_switch_role` em `profiles`; `UserMenu` exibe "Alternar perfil" para contas com acesso duplo (admin ↔ aluno)
+- [x] **Navegação de retorno** — botão "← Voltar" em todas as telas de detalhe: pacotes, novo pacote, configurações (role-aware), alunos, grupos
+- [x] **Layout mobile responsivo** — tópicos e filtros de exercício colapsáveis no mobile; sidebar colapsável no detalhe do pacote
+- [x] **Histórico de revisão** (`/estudar/historico`) — tópicos agrupados por prioridade (revisar → concluído → não iniciado); progresso, acerto e data por tópico; botões de estudar/revisar/refazer
+- [x] **Context de perfil** — `UserProfileContext` + `UserProfileProvider`; profile fetched em layouts server components, consumido por `UserMenu` sem quebrar boundary client/server
 - [ ] **Deploy** — Vercel + Supabase produção
 
 ---
@@ -107,4 +115,4 @@ _Planejada. Ver [PRD seção 14](./01-prd-principal.md#14-roadmap)._
 
 ---
 
-_Última atualização: 2026-05-15 — Fase 1 quase completa: todos os 12 tipos de exercícios, grupos e convites implementados; falta apenas deploy_
+_Última atualização: 2026-05-15 — Fase 1 completa: auth, grupos, IA, histórico, perfil duplo, mobile. Falta apenas deploy em produção._
