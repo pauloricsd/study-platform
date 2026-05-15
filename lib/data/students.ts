@@ -13,8 +13,8 @@ function mapProfile(row: ProfileRow): Student {
 }
 
 async function db() {
-  const { createClient } = await import("@/lib/supabase/server");
-  return createClient();
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  return createAdminClient();
 }
 
 export async function getStudents(): Promise<Student[]> {

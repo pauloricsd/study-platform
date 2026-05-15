@@ -31,8 +31,8 @@ export function StudyPackCard({ pack }: StudyPackCardProps) {
   const completion = getCompletionRate(pack.progress);
   const accuracy = getAccuracyRate(pack.progress);
   const students = mockStudents.filter((s) => pack.studentIds.includes(s.id));
-  const isUrgent = daysUntil <= 7 && daysUntil > 0;
-  const isOverdue = daysUntil < 0;
+  const isUrgent = daysUntil !== null && daysUntil <= 7 && daysUntil > 0;
+  const isOverdue = daysUntil !== null && daysUntil < 0;
 
   return (
     <Link href={`/pacotes/${pack.id}`}>
@@ -101,7 +101,9 @@ export function StudyPackCard({ pack }: StudyPackCardProps) {
             "text-muted-foreground": !isUrgent && !isOverdue,
           })}>
             {isOverdue ? <AlertCircle className="h-3.5 w-3.5" /> : isUrgent ? <Clock className="h-3.5 w-3.5" /> : <CalendarDays className="h-3.5 w-3.5" />}
-            {isOverdue
+            {daysUntil === null
+              ? "Data não definida"
+              : isOverdue
               ? "Prova encerrada"
               : isUrgent
               ? `${daysUntil} dia${daysUntil !== 1 ? "s" : ""} para a prova`

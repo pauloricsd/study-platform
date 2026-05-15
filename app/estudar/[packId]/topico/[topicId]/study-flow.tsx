@@ -63,7 +63,7 @@ function evaluateAnswer(
     return "incorrect";
   }
 
-  if (exercise.type === "open_short") {
+  if (exercise.type === "open_short" || exercise.type === "text_interpretation") {
     if (userAnswer.trim().length < 15) return "too_short";
     if (attempt === 1 && userAnswer.trim().length < 50) return "partial";
     return "correct";
@@ -71,6 +71,44 @@ function evaluateAnswer(
 
   if (exercise.type === "numeric") {
     return norm(userAnswer) === norm(exercise.correctAnswer)
+      ? "correct"
+      : "incorrect";
+  }
+
+  if (exercise.type === "multiple_select") {
+    const sortIds = (s: string) => s.split(",").map((x) => x.trim()).sort().join(",");
+    return sortIds(userAnswer) === sortIds(exercise.correctAnswer)
+      ? "correct"
+      : "incorrect";
+  }
+
+  if (exercise.type === "open_long" || exercise.type === "text_production") {
+    if (userAnswer.trim().length < 30) return "too_short";
+    return "partial";
+  }
+
+  if (exercise.type === "explain_required") {
+    const [answer, explanation] = userAnswer.split("|||");
+    if (!answer?.trim() || !explanation?.trim()) return "too_short";
+    if (answer.trim().length < 10 || explanation.trim().length < 20) return "partial";
+    return "correct";
+  }
+
+  if (exercise.type === "match_columns") {
+    try {
+      const correct = JSON.parse(exercise.correctAnswer) as Record<string, string>;
+      const user = JSON.parse(userAnswer) as Record<string, string>;
+      const allCorrect = Object.entries(correct).every(([k, v]) => user[k] === v);
+      return allCorrect ? "correct" : "incorrect";
+    } catch {
+      return "incorrect";
+    }
+  }
+
+  if (exercise.type === "ordering") {
+    const correctOrder = exercise.correctAnswer.split(",").map((s) => s.trim());
+    const userOrder = userAnswer.split(",").map((s) => s.trim());
+    return JSON.stringify(correctOrder) === JSON.stringify(userOrder)
       ? "correct"
       : "incorrect";
   }
@@ -295,6 +333,203 @@ function TextInput({
   );
 }
 
+function MultipleSelectInput({
+  exercise,
+  selected,
+  answerState,
+  onToggle,
+}: {
+  exercise: Exercise;
+  selected: string[];
+  answerState: AnswerState;
+  onToggle: (id: string) => void;
+}) {
+  const answered = answerState !== "idle";
+  const correct = exercise.correctAnswer.split(",").map((s) => s.trim());
+
+  return (
+    <div className="space-y-2.5">
+      <p className="text-xs text-muted-foreground">Selecione todas as alternativas corretas.</p>
+      {exercise.choices!.map((choice) => {
+        const isSelected = selected.includes(choice.id);
+        const isCorrect = correct.includes(choice.id);
+        return (
+          <button
+            key={choice.id}
+            onClick={() => !answered && onToggle(choice.id)}
+            disabled={answered}
+            className={cn(
+              "w-full flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-sm transition-all",
+              !answered && !isSelected && "hover:border-primary/40 hover:bg-primary/5",
+              !answered && isSelected && "border-primary bg-primary/10 font-medium",
+              answered && isCorrect && "border-emerald-300 bg-emerald-50 text-emerald-800 font-medium",
+              answered && isSelected && !isCorrect && "border-red-300 bg-red-50 text-red-800",
+              answered && !isSelected && !isCorrect && "opacity-50 bg-muted/30"
+            )}
+          >
+            <span className={cn(
+              "flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 text-xs",
+              !answered && isSelected ? "border-primary bg-primary text-white" : "border-current"
+            )}>
+              {isSelected && "✓"}
+            </span>
+            <span className="font-medium mr-1">{choice.label})</span>
+            {choice.text}
+            {answered && isCorrect && <CheckCircle2 className="ml-auto h-4 w-4 shrink-0 text-emerald-600" />}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function MatchColumnsInput({
+  exercise,
+  value,
+  onChange,
+  disabled,
+}: {
+  exercise: Exercise;
+  value: Record<string, string>;
+  onChange: (v: Record<string, string>) => void;
+  disabled: boolean;
+}) {
+  let correct: Record<string, string> = {};
+  try { correct = JSON.parse(exercise.correctAnswer); } catch { /* empty */ }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">Associe cada item da coluna esquerda com o correspondente da coluna direita.</p>
+      {(exercise.leftItems ?? []).map((item, i) => {
+        const key = String(i);
+        const selected = value[key] ?? "";
+        const isCorrect = disabled && correct[key] === selected;
+        const isWrong = disabled && correct[key] !== selected;
+        return (
+          <div key={i} className="flex items-center gap-3">
+            <div className="flex-1 rounded-xl border bg-muted/30 px-4 py-3 text-sm font-medium">
+              {item}
+            </div>
+            <span className="text-muted-foreground">→</span>
+            <select
+              disabled={disabled}
+              value={selected}
+              onChange={(e) => onChange({ ...value, [key]: e.target.value })}
+              className={cn(
+                "flex-1 rounded-xl border px-4 py-3 text-sm bg-white outline-none focus:ring-2 focus:ring-ring",
+                disabled && isCorrect && "border-emerald-300 bg-emerald-50 text-emerald-800",
+                disabled && isWrong && "border-red-300 bg-red-50 text-red-800",
+                disabled && "cursor-default"
+              )}
+            >
+              <option value="">Selecione...</option>
+              {exercise.choices!.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}) {c.text}</option>
+              ))}
+            </select>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function OrderingInput({
+  exercise,
+  order,
+  onMove,
+  disabled,
+}: {
+  exercise: Exercise;
+  order: string[];
+  onMove: (from: number, to: number) => void;
+  disabled: boolean;
+}) {
+  const correct = exercise.correctAnswer.split(",").map((s) => s.trim());
+  return (
+    <div className="space-y-2.5">
+      <p className="text-xs text-muted-foreground">Arranje os itens na ordem correta usando as setas.</p>
+      {order.map((id, idx) => {
+        const choice = exercise.choices!.find((c) => c.id === id);
+        const isCorrect = disabled && correct[idx] === id;
+        const isWrong = disabled && correct[idx] !== id;
+        return (
+          <div key={id} className={cn(
+            "flex items-center gap-3 rounded-xl border px-4 py-3 text-sm bg-white",
+            disabled && isCorrect && "border-emerald-300 bg-emerald-50 text-emerald-800",
+            disabled && isWrong && "border-red-300 bg-red-50 text-red-800",
+          )}>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">
+              {idx + 1}
+            </span>
+            <span className="flex-1">{choice?.text}</span>
+            {!disabled && (
+              <div className="flex flex-col gap-0.5">
+                <button
+                  onClick={() => idx > 0 && onMove(idx, idx - 1)}
+                  disabled={idx === 0}
+                  className="rounded p-0.5 hover:bg-muted disabled:opacity-30"
+                >
+                  <ChevronUp className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => idx < order.length - 1 && onMove(idx, idx + 1)}
+                  disabled={idx === order.length - 1}
+                  className="rounded p-0.5 hover:bg-muted disabled:opacity-30"
+                >
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+            {disabled && isCorrect && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+            {disabled && isWrong && <XCircle className="h-4 w-4 text-red-400" />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ExplainRequiredInput({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: { answer: string; explanation: string };
+  onChange: (v: { answer: string; explanation: string }) => void;
+  disabled: boolean;
+}) {
+  const inputCls = cn(
+    "w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none ring-offset-background transition-all focus:ring-2 focus:ring-ring focus:ring-offset-2",
+    disabled && "bg-muted/40 text-muted-foreground cursor-default"
+  );
+  return (
+    <div className="space-y-3">
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-1.5">Sua resposta</p>
+        <input
+          className={inputCls}
+          value={value.answer}
+          onChange={(e) => onChange({ ...value, answer: e.target.value })}
+          disabled={disabled}
+          placeholder="Digite sua resposta..."
+        />
+      </div>
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-1.5">Explique seu raciocínio <span className="text-red-500">*</span></p>
+        <textarea
+          className={cn(inputCls, "resize-none min-h-[80px] leading-relaxed")}
+          value={value.explanation}
+          onChange={(e) => onChange({ ...value, explanation: e.target.value })}
+          disabled={disabled}
+          placeholder="Explique como chegou a essa resposta..."
+          rows={3}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ─── Exercise card ────────────────────────────────────────────────────────────
 
 function ExerciseCard({
@@ -309,6 +544,12 @@ function ExerciseCard({
   onResult: (result: ExerciseResult) => void;
 }) {
   const [userAnswer, setUserAnswer] = useState("");
+  const [multiSelectIds, setMultiSelectIds] = useState<string[]>([]);
+  const [matchValue, setMatchValue] = useState<Record<string, string>>({});
+  const [orderValue, setOrderValue] = useState<string[]>(
+    exercise.type === "ordering" ? (exercise.choices ?? []).map((c) => c.id) : []
+  );
+  const [explainValue, setExplainValue] = useState({ answer: "", explanation: "" });
   const [answerState, setAnswerState] = useState<AnswerState>("idle");
   const [attempt, setAttempt] = useState(1);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -318,20 +559,29 @@ function ExerciseCard({
   const isDone = answerState === "correct" || answerState === "revealed";
   const feedback = answerState !== "idle" ? feedbackConfig[answerState] : null;
 
+  function getEffectiveAnswer(): string {
+    if (exercise.type === "multiple_select") return multiSelectIds.join(",");
+    if (exercise.type === "match_columns") return JSON.stringify(matchValue);
+    if (exercise.type === "ordering") return orderValue.join(",");
+    if (exercise.type === "explain_required")
+      return `${explainValue.answer}|||${explainValue.explanation}`;
+    return userAnswer;
+  }
+
   function handleSubmit() {
-    if (
-      !userAnswer &&
-      exercise.type !== "multiple_choice" &&
-      exercise.type !== "true_false"
-    )
-      return;
-    const result = evaluateAnswer(exercise, userAnswer, attempt);
+    const effective = getEffectiveAnswer();
+    if (!effective && exercise.type !== "multiple_choice" && exercise.type !== "true_false") return;
+    const result = evaluateAnswer(exercise, effective, attempt);
     setAnswerState(result);
     if (result === "correct") setShowExplanation(true);
   }
 
   function handleRetry() {
     setUserAnswer("");
+    setMultiSelectIds([]);
+    setMatchValue({});
+    setOrderValue(exercise.type === "ordering" ? (exercise.choices ?? []).map((c) => c.id) : []);
+    setExplainValue({ answer: "", explanation: "" });
     setAnswerState("idle");
     setAttempt((a) => a + 1);
   }
@@ -342,19 +592,67 @@ function ExerciseCard({
   }
 
   function handleNext() {
+    const effective = getEffectiveAnswer();
     onResult({
       exercise,
-      userAnswer,
+      userAnswer: effective,
       correct: answerState === "correct",
       wasRevealed: answerState === "revealed",
     });
   }
 
+  function moveOrderItem(from: number, to: number) {
+    const next = [...orderValue];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    setOrderValue(next);
+  }
+
   const canSubmit =
-    answerState === "idle" &&
-    (exercise.type === "multiple_choice" || exercise.type === "true_false"
-      ? userAnswer !== ""
-      : userAnswer.trim().length > 0);
+    answerState === "idle" && (() => {
+      if (exercise.type === "multiple_choice" || exercise.type === "true_false") return userAnswer !== "";
+      if (exercise.type === "multiple_select") return multiSelectIds.length > 0;
+      if (exercise.type === "match_columns")
+        return (exercise.leftItems ?? []).every((_, i) => matchValue[String(i)]);
+      if (exercise.type === "ordering") return orderValue.length > 0;
+      if (exercise.type === "explain_required")
+        return explainValue.answer.trim().length > 0 && explainValue.explanation.trim().length > 0;
+      return userAnswer.trim().length > 0;
+    })();
+
+  function renderCorrectAnswer() {
+    if (exercise.type === "multiple_choice") {
+      return exercise.choices!.find((c) => c.id === exercise.correctAnswer)?.text;
+    }
+    if (exercise.type === "true_false") {
+      return exercise.correctAnswer === "true" ? "Verdadeiro" : "Falso";
+    }
+    if (exercise.type === "multiple_select") {
+      const ids = exercise.correctAnswer.split(",").map((s) => s.trim());
+      return exercise.choices!.filter((c) => ids.includes(c.id)).map((c) => `${c.label}) ${c.text}`).join(", ");
+    }
+    if (exercise.type === "match_columns") {
+      try {
+        const correct = JSON.parse(exercise.correctAnswer) as Record<string, string>;
+        return (exercise.leftItems ?? []).map((item, i) => {
+          const choice = exercise.choices!.find((c) => c.id === correct[String(i)]);
+          return `${item} → ${choice?.text ?? "?"}`;
+        }).join(" | ");
+      } catch { return exercise.correctAnswer; }
+    }
+    if (exercise.type === "ordering") {
+      const ids = exercise.correctAnswer.split(",").map((s) => s.trim());
+      return ids.map((id, i) => {
+        const choice = exercise.choices!.find((c) => c.id === id);
+        return `${i + 1}. ${choice?.text ?? id}`;
+      }).join(" → ");
+    }
+    if (exercise.type === "explain_required") {
+      const [ans, exp] = exercise.correctAnswer.split("|||");
+      return exp ? `Resposta: ${ans} | Raciocínio: ${exp}` : exercise.correctAnswer;
+    }
+    return exercise.correctAnswer;
+  }
 
   return (
     <div className="space-y-5">
@@ -371,6 +669,14 @@ function ExerciseCard({
         </span>
       </div>
 
+      {/* Passage (text_interpretation) */}
+      {exercise.type === "text_interpretation" && exercise.passage && (
+        <div className="rounded-xl border bg-muted/20 px-4 py-4 text-sm leading-relaxed text-foreground">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Leia o texto</p>
+          <p className="whitespace-pre-wrap">{exercise.passage}</p>
+        </div>
+      )}
+
       {/* Statement */}
       <p className="text-base font-medium text-foreground leading-relaxed">
         {exercise.statement}
@@ -379,131 +685,101 @@ function ExerciseCard({
       {/* Answer input */}
       <div>
         {exercise.type === "multiple_choice" && (
-          <MultipleChoiceInput
-            exercise={exercise}
-            selected={userAnswer}
-            answerState={answerState}
-            onSelect={setUserAnswer}
-          />
+          <MultipleChoiceInput exercise={exercise} selected={userAnswer} answerState={answerState} onSelect={setUserAnswer} />
         )}
         {exercise.type === "true_false" && (
-          <TrueFalseInput
-            selected={userAnswer}
+          <TrueFalseInput selected={userAnswer} answerState={answerState} correctAnswer={exercise.correctAnswer} onSelect={setUserAnswer} />
+        )}
+        {exercise.type === "multiple_select" && (
+          <MultipleSelectInput
+            exercise={exercise}
+            selected={multiSelectIds}
             answerState={answerState}
-            correctAnswer={exercise.correctAnswer}
-            onSelect={setUserAnswer}
+            onToggle={(id) => setMultiSelectIds((prev) =>
+              prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+            )}
           />
+        )}
+        {exercise.type === "match_columns" && (
+          <MatchColumnsInput exercise={exercise} value={matchValue} onChange={setMatchValue} disabled={answered} />
+        )}
+        {exercise.type === "ordering" && (
+          <OrderingInput exercise={exercise} order={orderValue} onMove={moveOrderItem} disabled={answered} />
         )}
         {exercise.type === "fill_blank" && (
-          <TextInput
-            value={userAnswer}
-            onChange={setUserAnswer}
-            disabled={answered}
-            placeholder="Complete a frase..."
-          />
+          <TextInput value={userAnswer} onChange={setUserAnswer} disabled={answered} placeholder="Complete a frase..." />
         )}
-        {exercise.type === "open_short" && (
-          <TextInput
-            value={userAnswer}
-            onChange={setUserAnswer}
-            disabled={answered}
-            multiline
-          />
+        {(exercise.type === "open_short" || exercise.type === "text_interpretation") && (
+          <TextInput value={userAnswer} onChange={setUserAnswer} disabled={answered} multiline />
+        )}
+        {(exercise.type === "open_long" || exercise.type === "text_production") && (
+          <TextInput value={userAnswer} onChange={setUserAnswer} disabled={answered} multiline
+            placeholder={exercise.type === "text_production" ? "Desenvolva sua produção textual aqui..." : "Escreva sua resposta detalhada..."} />
         )}
         {exercise.type === "numeric" && (
-          <TextInput
-            value={userAnswer}
-            onChange={setUserAnswer}
-            disabled={answered}
-            placeholder="Digite o valor numérico..."
-          />
+          <TextInput value={userAnswer} onChange={setUserAnswer} disabled={answered} placeholder="Digite o valor numérico..." />
+        )}
+        {exercise.type === "explain_required" && (
+          <ExplainRequiredInput value={explainValue} onChange={setExplainValue} disabled={answered} />
         )}
       </div>
 
       {/* Feedback */}
       {feedback && (
-        <div
-          className={cn(
-            "rounded-xl border p-4 space-y-2",
-            feedback.bg,
-            feedback.border
-          )}
-        >
+        <div className={cn("rounded-xl border p-4 space-y-2", feedback.bg, feedback.border)}>
           <div className="flex items-center gap-2">
-            <feedback.icon
-              className={cn("h-5 w-5 shrink-0", feedback.color)}
-            />
-            <span className={cn("text-sm font-semibold", feedback.color)}>
-              {feedback.title}
-            </span>
+            <feedback.icon className={cn("h-5 w-5 shrink-0", feedback.color)} />
+            <span className={cn("text-sm font-semibold", feedback.color)}>{feedback.title}</span>
           </div>
-          <p className={cn("text-sm leading-relaxed", feedback.color)}>
-            {feedback.message}
-          </p>
+          <p className={cn("text-sm leading-relaxed", feedback.color)}>{feedback.message}</p>
 
           {showExplanation && (
             <div className="mt-3 pt-3 border-t border-current/20 space-y-2">
               {answerState === "revealed" && (
                 <div className="rounded-lg bg-white/60 px-3 py-2">
-                  <p className="text-xs font-semibold text-foreground mb-0.5">
-                    Resposta correta
-                  </p>
-                  <p className="text-sm text-foreground">
-                    {exercise.type === "multiple_choice"
-                      ? exercise.choices!.find(
-                          (c) => c.id === exercise.correctAnswer
-                        )?.text
-                      : exercise.type === "true_false"
-                      ? exercise.correctAnswer === "true"
-                        ? "Verdadeiro"
-                        : "Falso"
-                      : exercise.correctAnswer}
-                  </p>
+                  <p className="text-xs font-semibold text-foreground mb-0.5">Resposta correta</p>
+                  <p className="text-sm text-foreground">{renderCorrectAnswer()}</p>
                 </div>
               )}
               <div className="rounded-lg bg-white/60 px-3 py-2">
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <Lightbulb className="h-3.5 w-3.5 text-amber-600" />
-                  <p className="text-xs font-semibold text-foreground">
-                    Explicação
-                  </p>
+                  <p className="text-xs font-semibold text-foreground">Explicação</p>
                 </div>
-                <p className="text-sm text-foreground leading-relaxed">
-                  {exercise.explanation}
-                </p>
+                <p className="text-sm text-foreground leading-relaxed">{exercise.explanation}</p>
               </div>
             </div>
           )}
         </div>
       )}
 
+      {/* open_long / text_production: always show reveal after partial */}
+      {(exercise.type === "open_long" || exercise.type === "text_production") &&
+        answerState === "partial" && !showExplanation && (
+        <Button variant="outline" size="sm" className="gap-1.5 text-muted-foreground"
+          onClick={() => setShowExplanation(true)}>
+          <Lightbulb className="h-3.5 w-3.5" />
+          Ver resposta de referência
+        </Button>
+      )}
+
       {/* Action buttons */}
       <div className="flex items-center gap-3">
         {answerState === "idle" && (
-          <Button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className="gap-2"
-          >
+          <Button onClick={handleSubmit} disabled={!canSubmit} className="gap-2">
             Responder
             <ChevronRight className="h-4 w-4" />
           </Button>
         )}
 
-        {(answerState === "incorrect" ||
-          answerState === "partial" ||
-          answerState === "too_short") && (
+        {(answerState === "incorrect" || answerState === "partial" || answerState === "too_short") &&
+          exercise.type !== "open_long" && exercise.type !== "text_production" && (
           <>
             <Button onClick={handleRetry} variant="outline" className="gap-2">
               <RotateCcw className="h-4 w-4" />
               Tentar novamente
             </Button>
-            <Button
-              onClick={handleReveal}
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground gap-1.5"
-            >
+            <Button onClick={handleReveal} variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
               <Eye className="h-4 w-4" />
               Ver gabarito
             </Button>
@@ -513,6 +789,15 @@ function ExerciseCard({
         {isDone && (
           <Button onClick={handleNext} className="gap-2">
             Próxima questão
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
+
+        {/* open_long / text_production: advance after partial */}
+        {(exercise.type === "open_long" || exercise.type === "text_production") &&
+          answerState === "partial" && (
+          <Button onClick={handleNext} variant="outline" className="gap-2">
+            Avançar mesmo assim
             <ChevronRight className="h-4 w-4" />
           </Button>
         )}
@@ -529,21 +814,63 @@ function formatAnswer(exercise: Exercise, answer: string): string {
     const choice = exercise.choices?.find((c) => c.id === answer);
     return choice ? `${choice.label} — ${choice.text}` : answer;
   }
-  if (exercise.type === "true_false") {
-    return answer === "true" ? "Verdadeiro" : "Falso";
+  if (exercise.type === "true_false") return answer === "true" ? "Verdadeiro" : "Falso";
+  if (exercise.type === "multiple_select") {
+    const ids = answer.split(",").map((s) => s.trim());
+    return exercise.choices?.filter((c) => ids.includes(c.id)).map((c) => `${c.label}) ${c.text}`).join(", ") ?? answer;
+  }
+  if (exercise.type === "match_columns") {
+    try {
+      const map = JSON.parse(answer) as Record<string, string>;
+      return (exercise.leftItems ?? []).map((item, i) => {
+        const choice = exercise.choices?.find((c) => c.id === map[String(i)]);
+        return `${item} → ${choice?.text ?? "?"}`;
+      }).join(" | ");
+    } catch { return answer; }
+  }
+  if (exercise.type === "ordering") {
+    const ids = answer.split(",").map((s) => s.trim());
+    return ids.map((id, i) => {
+      const choice = exercise.choices?.find((c) => c.id === id);
+      return `${i + 1}. ${choice?.text ?? id}`;
+    }).join(" → ");
+  }
+  if (exercise.type === "explain_required") {
+    const [ans, exp] = answer.split("|||");
+    return exp ? `${ans} (raciocínio: ${exp})` : answer;
   }
   return answer;
 }
 
 function formatCorrectAnswer(exercise: Exercise): string {
   if (exercise.type === "multiple_choice") {
-    const choice = exercise.choices?.find(
-      (c) => c.id === exercise.correctAnswer
-    );
+    const choice = exercise.choices?.find((c) => c.id === exercise.correctAnswer);
     return choice ? `${choice.label} — ${choice.text}` : exercise.correctAnswer;
   }
-  if (exercise.type === "true_false") {
-    return exercise.correctAnswer === "true" ? "Verdadeiro" : "Falso";
+  if (exercise.type === "true_false") return exercise.correctAnswer === "true" ? "Verdadeiro" : "Falso";
+  if (exercise.type === "multiple_select") {
+    const ids = exercise.correctAnswer.split(",").map((s) => s.trim());
+    return exercise.choices?.filter((c) => ids.includes(c.id)).map((c) => `${c.label}) ${c.text}`).join(", ") ?? exercise.correctAnswer;
+  }
+  if (exercise.type === "match_columns") {
+    try {
+      const correct = JSON.parse(exercise.correctAnswer) as Record<string, string>;
+      return (exercise.leftItems ?? []).map((item, i) => {
+        const choice = exercise.choices?.find((c) => c.id === correct[String(i)]);
+        return `${item} → ${choice?.text ?? "?"}`;
+      }).join(" | ");
+    } catch { return exercise.correctAnswer; }
+  }
+  if (exercise.type === "ordering") {
+    const ids = exercise.correctAnswer.split(",").map((s) => s.trim());
+    return ids.map((id, i) => {
+      const choice = exercise.choices?.find((c) => c.id === id);
+      return `${i + 1}. ${choice?.text ?? id}`;
+    }).join(" → ");
+  }
+  if (exercise.type === "explain_required") {
+    const [ans, exp] = exercise.correctAnswer.split("|||");
+    return exp ? `${ans} (raciocínio: ${exp})` : exercise.correctAnswer;
   }
   return exercise.correctAnswer;
 }

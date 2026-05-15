@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/data/auth";
 import { processPdfText, type GeneratedTopic } from "@/lib/ai/process-pdf";
 import type { StudyPackRow, TopicProgressRow } from "@/lib/database.types";
@@ -28,11 +28,11 @@ export async function processPackAction(formData: FormData): Promise<
   const examName = formData.get("examName") as string;
   const examDate = formData.get("examDate") as string;
 
-  if (!title || !subject || !grade || !examName || !examDate) {
+  if (!title || !subject || !grade || !examName) {
     return { error: "Dados do pacote incompletos." };
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const profile = await getCurrentProfile();
   const adminId = profile?.id ?? null;
 
@@ -44,7 +44,7 @@ export async function processPackAction(formData: FormData): Promise<
       subject,
       grade,
       exam_name: examName,
-      exam_date: examDate,
+      exam_date: examDate || null,
       status: "draft",
       created_by: adminId,
     } as never)
@@ -84,19 +84,17 @@ export async function processPackAction(formData: FormData): Promise<
       } as never);
   }
 
-  // 4. Extract text from PDF
+  // 4. Extract text from PDF using unpdf (ESM-native, works in Vercel serverless)
   let extractedText = "";
   try {
-    // Dynamic import to avoid Next.js static analysis issues
-    // pdf-parse is a CJS module; cast needed because TS resolves its ESM declaration
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfModule = await import("pdf-parse") as any;
-    const pdfParse = pdfModule.default ?? pdfModule;
-    const parsed = await pdfParse(fileBuffer);
-    extractedText = parsed.text;
+    const { extractText, getDocumentProxy } = await import("unpdf");
+    const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
+    const { text } = await extractText(pdf, { mergePages: true });
+    extractedText = text;
   } catch (err) {
-    console.error("PDF parse error:", err);
-    return { error: "Não foi possível extrair texto do PDF. Verifique se é um PDF textual (não escaneado)." };
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("PDF parse error:", msg);
+    return { error: `Erro ao ler o PDF: ${msg}` };
   }
 
   if (!extractedText.trim()) {
@@ -132,7 +130,7 @@ export async function publishPackAction(
     return { error: "Nenhum tópico selecionado." };
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const selectedTopics = enabledIndices.map((i) => ({
     ...topics[i],
@@ -211,7 +209,7 @@ export async function publishPackAction(
 
 // Save draft without publishing (step 4 "Salvar rascunho")
 export async function saveDraftAction(packId: string): Promise<void> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   await supabase
     .from("study_packs")
     .update({ status: "draft", updated_at: new Date().toISOString() } as never)

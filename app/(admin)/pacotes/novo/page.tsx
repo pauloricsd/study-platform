@@ -26,6 +26,7 @@ import {
   Layers,
   Check,
   AlertCircle,
+  Download,
 } from "lucide-react";
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -162,7 +163,7 @@ export default function NovoPacotePage() {
     router.push("/pacotes");
   }
 
-  const isStep1Valid = form.title.trim() && form.examName.trim() && form.examDate;
+  const isStep1Valid = form.title.trim() && form.examName.trim();
   const activeTopicsCount = Object.values(topicToggles).filter(Boolean).length;
 
   return (
@@ -251,7 +252,10 @@ export default function NovoPacotePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Data da prova *</label>
+                <label className="text-sm font-medium">
+                  Data da prova{" "}
+                  <span className="text-muted-foreground font-normal">(opcional)</span>
+                </label>
                 <Input
                   type="date"
                   value={form.examDate}
@@ -270,11 +274,21 @@ export default function NovoPacotePage() {
         {/* Step 2 — Upload */}
         {step === 2 && (
           <div className="max-w-xl">
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold">Material de estudo</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Envie o PDF com o conteúdo que será processado pela IA.
-              </p>
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">Material de estudo</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Envie o PDF com o conteúdo que será processado pela IA.
+                </p>
+              </div>
+              <a
+                href="/boas-praticas-conteudo-ia.md"
+                download="boas-praticas-conteudo-ia.md"
+                className="flex items-center gap-1.5 rounded-lg border bg-white px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors shrink-0"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Guia de boas práticas
+              </a>
             </div>
 
             {processError && (

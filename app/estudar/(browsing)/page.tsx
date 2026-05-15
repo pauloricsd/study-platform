@@ -33,7 +33,7 @@ export default async function StudentHome() {
 
   const continuePack = [...myPacks]
     .filter((p) => getCompletionRate(p.progress) < 100)
-    .sort((a, b) => getDaysUntilExam(a.examDate) - getDaysUntilExam(b.examDate))[0];
+    .sort((a, b) => (getDaysUntilExam(a.examDate) ?? Infinity) - (getDaysUntilExam(b.examDate) ?? Infinity))[0];
 
   const totalQuestions = myPacks.reduce(
     (acc, p) => acc + (p.progress?.questionsTotal ?? 0),
@@ -56,13 +56,14 @@ export default async function StudentHome() {
   ).length;
 
   const nextExam = [...myPacks]
-    .filter((p) => getDaysUntilExam(p.examDate) > 0)
-    .sort((a, b) => getDaysUntilExam(a.examDate) - getDaysUntilExam(b.examDate))[0];
+    .filter((p) => { const d = getDaysUntilExam(p.examDate); return d !== null && d > 0; })
+    .sort((a, b) => (getDaysUntilExam(a.examDate) ?? Infinity) - (getDaysUntilExam(b.examDate) ?? Infinity))[0];
   const daysToNextExam = nextExam ? getDaysUntilExam(nextExam.examDate) : null;
 
-  const urgent = myPacks.filter(
-    (p) => getDaysUntilExam(p.examDate) <= 7 && getDaysUntilExam(p.examDate) > 0
-  );
+  const urgent = myPacks.filter((p) => {
+    const d = getDaysUntilExam(p.examDate);
+    return d !== null && d <= 7 && d > 0;
+  });
   const inProgress = myPacks.filter(
     (p) => getCompletionRate(p.progress) > 0 && getCompletionRate(p.progress) < 100
   );
@@ -146,15 +147,19 @@ export default async function StudentHome() {
                     </h3>
                     <p className="text-xs text-muted-foreground">{continuePack.grade}</p>
                   </div>
-                  <div className={cn(
-                    "shrink-0 flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold",
-                    getDaysUntilExam(continuePack.examDate) <= 7
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-muted text-muted-foreground"
-                  )}>
-                    <Clock className="h-3 w-3" />
-                    {getDaysUntilExam(continuePack.examDate)}d
-                  </div>
+                  {(() => {
+                    const d = getDaysUntilExam(continuePack.examDate);
+                    if (d === null) return null;
+                    return (
+                      <div className={cn(
+                        "shrink-0 flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold",
+                        d <= 7 ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"
+                      )}>
+                        <Clock className="h-3 w-3" />
+                        {d}d
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="space-y-1.5">
@@ -276,9 +281,9 @@ export default async function StudentHome() {
                             </span>
                             <span className={cn(
                               "font-medium",
-                              days <= 7 ? "text-amber-600" : "text-muted-foreground"
+                              days !== null && days <= 7 ? "text-amber-600" : "text-muted-foreground"
                             )}>
-                              {days > 0 ? `${days}d` : "encerrado"}
+                              {days === null ? "—" : days > 0 ? `${days}d` : "encerrado"}
                             </span>
                           </div>
                         </div>

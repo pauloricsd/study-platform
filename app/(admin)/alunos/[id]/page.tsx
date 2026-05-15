@@ -200,7 +200,7 @@ export default async function StudentDetailPage({
                           <span className="flex items-center gap-1 text-xs text-muted-foreground">
                             <CalendarDays className="h-3 w-3" />
                             {formatExamDate(pack.examDate)}
-                            {daysLeft > 0 && (
+                            {daysLeft !== null && daysLeft > 0 && (
                               <span className={cn(
                                 "ml-0.5",
                                 daysLeft <= 7 ? "text-amber-600 font-medium" : ""

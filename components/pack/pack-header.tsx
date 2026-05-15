@@ -1,20 +1,15 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
   CalendarDays,
   Clock,
   BookOpen,
   CheckCircle2,
-  Edit,
-  Eye,
-  Send,
-  MoreHorizontal,
 } from "lucide-react";
 import { type StudyPack, subjectColors, statusLabels, getDaysUntilExam } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { PackActions } from "@/app/(admin)/pacotes/[id]/pack-actions";
 
 interface PackHeaderProps {
   pack: StudyPack;
@@ -29,7 +24,7 @@ const statusVariant: Record<string, "success" | "warning" | "draft" | "review" |
 
 export function PackHeader({ pack }: PackHeaderProps) {
   const daysUntil = getDaysUntilExam(pack.examDate);
-  const isUrgent = daysUntil <= 7 && daysUntil > 0;
+  const isUrgent = daysUntil !== null && daysUntil <= 7 && daysUntil > 0;
 
   return (
     <div className="border-b bg-white">
@@ -87,7 +82,9 @@ export function PackHeader({ pack }: PackHeaderProps) {
                 ) : (
                   <CalendarDays className="h-4 w-4" />
                 )}
-                {daysUntil > 0
+                {daysUntil === null
+                  ? "Data não definida"
+                  : daysUntil > 0
                   ? `Prova em ${daysUntil} dia${daysUntil !== 1 ? "s" : ""}`
                   : "Prova encerrada"}
               </span>
@@ -95,27 +92,7 @@ export function PackHeader({ pack }: PackHeaderProps) {
           </div>
 
           {/* Right: actions */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Link href={`/estudar/${pack.id}`}>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Eye className="h-4 w-4" />
-                Visualizar como aluno
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Edit className="h-4 w-4" />
-              Editar
-            </Button>
-            {pack.status !== "published" && (
-              <Button size="sm" className="gap-2">
-                <Send className="h-4 w-4" />
-                Publicar
-              </Button>
-            )}
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </div>
+          <PackActions pack={pack} />
         </div>
       </div>
     </div>

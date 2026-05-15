@@ -24,8 +24,8 @@ function mapPackRow(row: StudyPackRow): StudyPack {
 }
 
 async function db() {
-  const { createClient } = await import("@/lib/supabase/server");
-  return createClient();
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  return createAdminClient();
 }
 
 /** Admin: all packs regardless of assignment */

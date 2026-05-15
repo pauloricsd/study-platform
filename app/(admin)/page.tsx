@@ -21,8 +21,9 @@ import {
 import { cn } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const [allPacks, students] = await Promise.all([getPacks(), getStudents()]);
+  const [allPacksRaw, students] = await Promise.all([getPacks(), getStudents()]);
 
+  const allPacks = allPacksRaw.filter((p) => p.status !== "archived");
   const publishedPacks = allPacks.filter((p) => p.status === "published");
   const draftPacks = allPacks.filter(
     (p) => p.status === "draft" || p.status === "in_review"
@@ -38,13 +39,11 @@ export default async function DashboardPage() {
     : 0;
 
   const urgentPacks = allPacks
-    .filter(
-      (p) =>
-        p.status === "published" &&
-        getDaysUntilExam(p.examDate) <= 7 &&
-        getDaysUntilExam(p.examDate) > 0
-    )
-    .sort((a, b) => getDaysUntilExam(a.examDate) - getDaysUntilExam(b.examDate));
+    .filter((p) => {
+      const d = getDaysUntilExam(p.examDate);
+      return p.status === "published" && d !== null && d <= 7 && d > 0;
+    })
+    .sort((a, b) => (getDaysUntilExam(a.examDate) ?? 0) - (getDaysUntilExam(b.examDate) ?? 0));
 
   const recentPacks = [...allPacks]
     .sort(
@@ -251,11 +250,8 @@ export default async function DashboardPage() {
               </h3>
               <div className="rounded-xl border bg-white divide-y">
                 {[...allPacks]
-                  .filter((p) => getDaysUntilExam(p.examDate) > 0)
-                  .sort(
-                    (a, b) =>
-                      getDaysUntilExam(a.examDate) - getDaysUntilExam(b.examDate)
-                  )
+                  .filter((p) => { const d = getDaysUntilExam(p.examDate); return d !== null && d > 0; })
+                  .sort((a, b) => (getDaysUntilExam(a.examDate) ?? 0) - (getDaysUntilExam(b.examDate) ?? 0))
                   .slice(0, 4)
                   .map((pack) => {
                     const days = getDaysUntilExam(pack.examDate);
@@ -275,12 +271,12 @@ export default async function DashboardPage() {
                         <span
                           className={cn(
                             "text-xs font-semibold shrink-0",
-                            days <= 7
+                            days !== null && days <= 7
                               ? "text-amber-600"
                               : "text-muted-foreground"
                           )}
                         >
-                          {days}d
+                          {days !== null ? `${days}d` : "—"}
                         </span>
                       </div>
                     );

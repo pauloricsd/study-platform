@@ -5,8 +5,8 @@ import type { TopicProgressRow } from "@/lib/database.types";
 export type { TopicHistory };
 
 async function db() {
-  const { createClient } = await import("@/lib/supabase/server");
-  return createClient();
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  return createAdminClient();
 }
 
 export async function getTopicHistory(studentId: string): Promise<TopicHistory[]> {

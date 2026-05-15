@@ -3,8 +3,8 @@ import { mockTopics, mockExercises, type Topic, type Exercise } from "@/lib/mock
 import type { TopicRow, SectionRow, ExerciseRow } from "@/lib/database.types";
 
 async function db() {
-  const { createClient } = await import("@/lib/supabase/server");
-  return createClient();
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  return createAdminClient();
 }
 
 function mapSections(sections: SectionRow[]): Topic["sections"] {

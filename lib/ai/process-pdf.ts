@@ -7,11 +7,25 @@ export interface GeneratedSection {
 }
 
 export interface GeneratedExercise {
-  type: "multiple_choice" | "true_false" | "fill_blank" | "open_short";
+  type:
+    | "multiple_choice"
+    | "true_false"
+    | "fill_blank"
+    | "open_short"
+    | "numeric"
+    | "multiple_select"
+    | "open_long"
+    | "match_columns"
+    | "ordering"
+    | "text_interpretation"
+    | "explain_required"
+    | "text_production";
   statement: string;
-  choices?: { id: string; label: string; text: string }[];
+  choices?: { id: string; label: string; text: string }[] | null;
   correctAnswer: string;
   explanation: string;
+  passage?: string | null;
+  leftItems?: string[] | null;
 }
 
 export interface GeneratedTopic {
@@ -40,10 +54,10 @@ const RESPONSE_SCHEMA = {
                   type: "string",
                   enum: ["explanation", "example", "note", "common_mistake", "summary"],
                 },
-                title: { type: "string" },
+                title: { type: ["string", "null"] },
                 content: { type: "string" },
               },
-              required: ["type", "content"],
+              required: ["type", "title", "content"],
               additionalProperties: false,
             },
           },
@@ -54,11 +68,15 @@ const RESPONSE_SCHEMA = {
               properties: {
                 type: {
                   type: "string",
-                  enum: ["multiple_choice", "true_false", "fill_blank", "open_short"],
+                  enum: [
+                    "multiple_choice", "true_false", "fill_blank", "open_short", "numeric",
+                    "multiple_select", "open_long", "match_columns", "ordering",
+                    "text_interpretation", "explain_required", "text_production",
+                  ],
                 },
                 statement: { type: "string" },
                 choices: {
-                  type: "array",
+                  type: ["array", "null"],
                   items: {
                     type: "object",
                     properties: {
@@ -72,8 +90,10 @@ const RESPONSE_SCHEMA = {
                 },
                 correctAnswer: { type: "string" },
                 explanation: { type: "string" },
+                passage: { type: ["string", "null"] },
+                leftItems: { type: ["array", "null"], items: { type: "string" } },
               },
-              required: ["type", "statement", "correctAnswer", "explanation"],
+              required: ["type", "statement", "choices", "correctAnswer", "explanation", "passage", "leftItems"],
               additionalProperties: false,
             },
           },
@@ -104,11 +124,24 @@ export async function processPdfText(
 
 Para cada tópico:
 - Crie seções de conteúdo variadas (explanation para teoria, example para exemplos práticos, note para dicas importantes, common_mistake para erros comuns, summary para resumo final)
-- Crie pelo menos 2 exercícios por tópico com tipos variados
-- Para múltipla escolha: inclua 4 alternativas (A, B, C, D) e coloque a letra correta em correctAnswer
-- Para true_false: coloque "true" ou "false" em correctAnswer
-- Para fill_blank: coloque a resposta esperada em correctAnswer
-- Escreva tudo em português brasileiro, linguagem clara e adequada para a idade
+- Crie pelo menos 3 exercícios por tópico com tipos variados
+
+Regras por tipo de exercício:
+- multiple_choice: 4 alternativas (A, B, C, D); correctAnswer = id da opção correta (ex: "b")
+- true_false: correctAnswer = "true" ou "false"; choices = null
+- fill_blank: correctAnswer = palavra ou expressão esperada; choices = null
+- open_short: correctAnswer = resposta ideal resumida; choices = null
+- numeric: correctAnswer = valor numérico como string (ex: "42"); use para cálculos e medidas exatas; choices = null
+- multiple_select: 4–5 alternativas; correctAnswer = ids corretos separados por vírgula (ex: "a,c"); marque 2 ou mais opções corretas
+- open_long: correctAnswer = gabarito resumido/critérios; choices = null; para questões dissertativas
+- match_columns: leftItems = lista de itens da esquerda; choices = itens da direita (id, label, text); correctAnswer = JSON {"0":"b","1":"a",...} mapeando índice de leftItems → id do choice
+- ordering: choices = itens a ordenar (em ordem embaralhada); correctAnswer = ids na ordem correta separados por vírgula (ex: "c,a,d,b")
+- text_interpretation: passage = texto de leitura; statement = pergunta sobre o texto; correctAnswer = resposta ideal; choices = null
+- explain_required: como open_short mas o aluno também deve justificar; correctAnswer = "resposta|||raciocínio esperado"; choices = null
+- text_production: correctAnswer = critérios/rubrica de avaliação; choices = null; para redações e produções longas
+
+Para campos que não se aplicam ao tipo: use null (choices = null, passage = null, leftItems = null).
+Escreva tudo em português brasileiro, linguagem clara e adequada para a idade.
 
 Gere entre 3 e 6 tópicos com base no conteúdo disponível.`;
 

@@ -10,7 +10,14 @@ export type QuestionType =
   | "true_false"
   | "fill_blank"
   | "open_short"
-  | "numeric";
+  | "numeric"
+  | "multiple_select"
+  | "open_long"
+  | "match_columns"
+  | "ordering"
+  | "text_interpretation"
+  | "explain_required"
+  | "text_production";
 
 export interface Section {
   id: string;
@@ -34,6 +41,11 @@ export interface Exercise {
   correctAnswer: string;
   explanation: string;
   order: number;
+  // text_interpretation: reading passage shown above the question
+  passage?: string;
+  // match_columns: left-side items to pair with choices (right side)
+  // correctAnswer is JSON: {"0":"b","1":"a",...} — leftItems index → choice id
+  leftItems?: string[];
 }
 
 export interface Topic {
@@ -417,9 +429,16 @@ export const sectionTypeConfig: Record<
 };
 
 export const questionTypeConfig: Record<QuestionType, { label: string; color: string }> = {
-  multiple_choice: { label: "Múltipla escolha", color: "text-blue-600" },
-  true_false: { label: "Verdadeiro ou falso", color: "text-violet-600" },
-  fill_blank: { label: "Complete a frase", color: "text-emerald-600" },
-  open_short: { label: "Resposta aberta", color: "text-amber-600" },
-  numeric: { label: "Numérica", color: "text-pink-600" },
+  multiple_choice:    { label: "Múltipla escolha",        color: "text-blue-600" },
+  true_false:         { label: "Verdadeiro ou falso",      color: "text-violet-600" },
+  fill_blank:         { label: "Complete a frase",         color: "text-emerald-600" },
+  open_short:         { label: "Resposta aberta",          color: "text-amber-600" },
+  numeric:            { label: "Numérica",                 color: "text-pink-600" },
+  multiple_select:    { label: "Múltipla seleção",         color: "text-cyan-600" },
+  open_long:          { label: "Dissertativa",             color: "text-orange-600" },
+  match_columns:      { label: "Associação de colunas",    color: "text-indigo-600" },
+  ordering:           { label: "Ordenação",                color: "text-teal-600" },
+  text_interpretation:{ label: "Interpretação de texto",  color: "text-rose-600" },
+  explain_required:   { label: "Com explicação",           color: "text-lime-700" },
+  text_production:    { label: "Produção textual",         color: "text-fuchsia-600" },
 };

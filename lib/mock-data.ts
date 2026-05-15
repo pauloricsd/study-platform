@@ -166,9 +166,11 @@ export const statusLabels: Record<StudyPackStatus, string> = {
   archived: "Arquivado",
 };
 
-export function getDaysUntilExam(examDate: string): number {
-  const today = new Date("2026-05-14");
+export function getDaysUntilExam(examDate: string | null | undefined): number | null {
+  if (!examDate) return null;
+  const today = new Date();
   const exam = new Date(examDate);
+  if (isNaN(exam.getTime())) return null;
   const diff = exam.getTime() - today.getTime();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }

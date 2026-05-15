@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { mockStudyPacks, getDaysUntilExam, subjectColors } from "@/lib/mock-data";
-import { mockTopics, mockExercises } from "@/lib/mock-topics";
+import { getPackById } from "@/lib/data/packs";
+import { getTopicsByPack, getExercisesForTopics } from "@/lib/data/topics";
+import { getDaysUntilExam, subjectColors } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Topbar } from "@/components/layout/topbar";
 import { cn } from "@/lib/utils";
 import {
@@ -13,6 +13,8 @@ import {
   Sparkles,
   ChevronRight,
   PlayCircle,
+  Eye,
+  ArrowLeft,
 } from "lucide-react";
 
 interface Props {
@@ -21,15 +23,18 @@ interface Props {
 
 export default async function StudentPackOverview({ params }: Props) {
   const { packId } = await params;
-  const pack = mockStudyPacks.find((p) => p.id === packId);
+
+  const [pack, topics] = await Promise.all([
+    getPackById(packId),
+    getTopicsByPack(packId),
+  ]);
+
   if (!pack) notFound();
 
-  const topics = mockTopics.filter((t) => t.packId === packId);
-  const exercises = mockExercises.filter((e) =>
-    topics.some((t) => t.id === e.topicId)
-  );
+  const topicIds = topics.map((t) => t.id);
+  const exercises = await getExercisesForTopics(topicIds);
 
-  const daysUntil = getDaysUntilExam(pack.examDate);
+  const daysUntil = getDaysUntilExam(pack.examDate ?? null);
   const progress = pack.progress;
   const completionPct = progress
     ? Math.round((progress.topicsDone / progress.topicsTotal) * 100)
@@ -47,6 +52,19 @@ export default async function StudentPackOverview({ params }: Props) {
 
   return (
     <>
+      {/* Preview banner */}
+      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 bg-amber-400 px-4 py-2 text-amber-950">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <Eye className="h-4 w-4 shrink-0" />
+          Você está visualizando como aluno — esta é uma prévia
+        </div>
+        <Link href={`/pacotes/${packId}`}>
+          <Button size="sm" variant="outline" className="h-7 gap-1.5 border-amber-600 bg-transparent text-amber-950 hover:bg-amber-500 hover:text-amber-950 text-xs">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Voltar ao pacote
+          </Button>
+        </Link>
+      </div>
       <Topbar title={pack.title} />
       <main className="mx-auto max-w-2xl px-4 py-8 space-y-8">
         {/* Pack hero */}
@@ -56,7 +74,7 @@ export default async function StudentPackOverview({ params }: Props) {
               <span
                 className={cn(
                   "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium",
-                  subjectColors[pack.subject]
+                  subjectColors[pack.subject] ?? "bg-slate-100 text-slate-700 border-slate-200"
                 )}
               >
                 {pack.subject}
@@ -90,10 +108,12 @@ export default async function StudentPackOverview({ params }: Props) {
           {/* Exam countdown */}
           <div className={cn(
             "flex items-center gap-2 text-sm font-medium rounded-lg px-3 py-2",
-            daysUntil <= 7 ? "bg-amber-50 text-amber-700" : "bg-muted/50 text-muted-foreground"
+            daysUntil !== null && daysUntil <= 7 ? "bg-amber-50 text-amber-700" : "bg-muted/50 text-muted-foreground"
           )}>
             <Clock className="h-4 w-4" />
-            {daysUntil > 0
+            {daysUntil === null
+              ? `${pack.examName} — data não definida`
+              : daysUntil > 0
               ? `${daysUntil} dia${daysUntil !== 1 ? "s" : ""} até a prova — ${pack.examName}`
               : "Prova encerrada"}
           </div>
@@ -129,8 +149,13 @@ export default async function StudentPackOverview({ params }: Props) {
             Tópicos
           </h2>
           <div className="rounded-2xl border bg-white divide-y overflow-hidden">
+            {topics.length === 0 && (
+              <p className="px-5 py-8 text-sm text-muted-foreground text-center">
+                Nenhum tópico encontrado.
+              </p>
+            )}
             {topics.map((topic, idx) => {
-              const status = topicStatuses[topic.id];
+              const status = topicStatuses[topic.id] ?? "not_started";
               const topicExCount = exercises.filter((e) => e.topicId === topic.id).length;
               const isAccessible = status !== "not_started" || idx === 0;
 
