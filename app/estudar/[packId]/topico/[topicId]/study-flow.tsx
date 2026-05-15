@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { SectionCard } from "@/components/pack/section-card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { type Topic, type Exercise, questionTypeConfig } from "@/lib/mock-topics";
+import { gradeOpenAnswer } from "@/lib/ai/grade-response";
 import {
   CheckCircle2,
   XCircle,
@@ -20,7 +21,14 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
+  Loader2,
 } from "lucide-react";
+
+const AI_GRADED_TYPES = new Set([
+  "open_short",
+  "text_interpretation",
+  "explain_required",
+]);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -553,6 +561,8 @@ function ExerciseCard({
   const [answerState, setAnswerState] = useState<AnswerState>("idle");
   const [attempt, setAttempt] = useState(1);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState("");
+  const [isGrading, startGrading] = useTransition();
 
   const typeConfig = questionTypeConfig[exercise.type];
   const answered = answerState !== "idle";
@@ -571,6 +581,23 @@ function ExerciseCard({
   function handleSubmit() {
     const effective = getEffectiveAnswer();
     if (!effective && exercise.type !== "multiple_choice" && exercise.type !== "true_false") return;
+
+    if (AI_GRADED_TYPES.has(exercise.type)) {
+      startGrading(async () => {
+        const { verdict, feedback } = await gradeOpenAnswer({
+          question: exercise.statement,
+          correctAnswer: exercise.correctAnswer,
+          userAnswer: effective,
+          exerciseType: exercise.type,
+          passage: exercise.passage ?? undefined,
+        });
+        setAiFeedback(feedback);
+        setAnswerState(verdict);
+        if (verdict === "correct") setShowExplanation(true);
+      });
+      return;
+    }
+
     const result = evaluateAnswer(exercise, effective, attempt);
     setAnswerState(result);
     if (result === "correct") setShowExplanation(true);
@@ -583,6 +610,7 @@ function ExerciseCard({
     setOrderValue(exercise.type === "ordering" ? (exercise.choices ?? []).map((c) => c.id) : []);
     setExplainValue({ answer: "", explanation: "" });
     setAnswerState("idle");
+    setAiFeedback("");
     setAttempt((a) => a + 1);
   }
 
@@ -731,7 +759,9 @@ function ExerciseCard({
             <feedback.icon className={cn("h-5 w-5 shrink-0", feedback.color)} />
             <span className={cn("text-sm font-semibold", feedback.color)}>{feedback.title}</span>
           </div>
-          <p className={cn("text-sm leading-relaxed", feedback.color)}>{feedback.message}</p>
+          <p className={cn("text-sm leading-relaxed", feedback.color)}>
+            {aiFeedback || feedback.message}
+          </p>
 
           {showExplanation && (
             <div className="mt-3 pt-3 border-t border-current/20 space-y-2">
@@ -765,10 +795,19 @@ function ExerciseCard({
 
       {/* Action buttons */}
       <div className="flex items-center gap-3">
-        {answerState === "idle" && (
-          <Button onClick={handleSubmit} disabled={!canSubmit} className="gap-2">
-            Responder
-            <ChevronRight className="h-4 w-4" />
+        {(answerState === "idle" || isGrading) && (
+          <Button onClick={handleSubmit} disabled={!canSubmit || isGrading} className="gap-2">
+            {isGrading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Corrigindo...
+              </>
+            ) : (
+              <>
+                Responder
+                <ChevronRight className="h-4 w-4" />
+              </>
+            )}
           </Button>
         )}
 

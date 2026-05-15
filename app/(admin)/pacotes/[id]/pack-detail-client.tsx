@@ -15,6 +15,7 @@ import {
   CheckSquare,
   Users,
   ChevronRight,
+  ChevronDown,
   BarChart2,
   Target,
   TrendingUp,
@@ -37,6 +38,7 @@ interface PackDetailClientProps {
 export function PackDetailClient({ pack, topics, exercises }: PackDetailClientProps) {
   const [activeTab, setActiveTab] = useState<TabId>("content");
   const [selectedTopicId, setSelectedTopicId] = useState<string>(topics[0]?.id ?? "");
+  const [topicsOpen, setTopicsOpen] = useState(false);
 
   const selectedTopic = topics.find((t) => t.id === selectedTopicId);
   const topicExercises = exercises.filter((e) => e.topicId === selectedTopicId);
@@ -79,8 +81,8 @@ export function PackDetailClient({ pack, topics, exercises }: PackDetailClientPr
       {/* Content tab */}
       {activeTab === "content" && (
         <div className="flex flex-1 min-h-0">
-          {/* Topic sidebar */}
-          <aside className="w-64 shrink-0 border-r bg-white overflow-y-auto">
+          {/* Topic sidebar — desktop only */}
+          <aside className="hidden md:block w-64 shrink-0 border-r bg-white overflow-y-auto">
             <div className="p-3 space-y-0.5">
               <p className="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Tópicos
@@ -122,7 +124,58 @@ export function PackDetailClient({ pack, topics, exercises }: PackDetailClientPr
           </aside>
 
           {/* Topic content */}
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="flex-1 overflow-y-auto">
+            {/* Mobile collapsible topics */}
+            <div className="md:hidden border-b bg-white">
+              <button
+                onClick={() => setTopicsOpen((o) => !o)}
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-foreground"
+              >
+                <span className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                  {selectedTopic
+                    ? `Tópico ${topics.indexOf(selectedTopic) + 1} de ${topics.length}: ${selectedTopic.title}`
+                    : "Tópicos"}
+                </span>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", topicsOpen && "rotate-180")} />
+              </button>
+              {topicsOpen && (
+                <div className="border-t divide-y bg-white">
+                  {topics.map((topic, idx) => {
+                    const active = topic.id === selectedTopicId;
+                    const topicExCount = exercises.filter((e) => e.topicId === topic.id).length;
+                    return (
+                      <button
+                        key={topic.id}
+                        onClick={() => { setSelectedTopicId(topic.id); setTopicsOpen(false); }}
+                        className={cn(
+                          "w-full text-left px-4 py-3 flex items-start gap-3 transition-colors",
+                          active ? "bg-primary/5" : "hover:bg-muted/50"
+                        )}
+                      >
+                        <span className={cn(
+                          "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold mt-0.5",
+                          active ? "bg-primary text-white" : "bg-muted-foreground/20 text-muted-foreground"
+                        )}>
+                          {idx + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className={cn("text-sm font-medium leading-snug", active ? "text-primary" : "text-foreground")}>
+                            {topic.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {topic.sections.length} seções · {topicExCount} questões
+                          </p>
+                        </div>
+                        {active && <ChevronRight className="h-4 w-4 text-primary shrink-0 mt-0.5" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 md:p-6">
             {selectedTopic ? (
               <div className="max-w-2xl space-y-4">
                 {/* Topic header */}
@@ -184,6 +237,7 @@ export function PackDetailClient({ pack, topics, exercises }: PackDetailClientPr
             ) : (
               <p className="text-muted-foreground text-sm">Nenhum tópico encontrado.</p>
             )}
+            </div>
           </main>
         </div>
       )}
@@ -191,8 +245,8 @@ export function PackDetailClient({ pack, topics, exercises }: PackDetailClientPr
       {/* Exercises tab */}
       {activeTab === "exercises" && (
         <div className="flex flex-1 min-h-0">
-          {/* Topic filter sidebar */}
-          <aside className="w-64 shrink-0 border-r bg-white overflow-y-auto">
+          {/* Topic filter sidebar — desktop only */}
+          <aside className="hidden md:block w-64 shrink-0 border-r bg-white overflow-y-auto">
             <div className="p-3 space-y-0.5">
               <p className="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Filtrar por tópico
@@ -230,13 +284,61 @@ export function PackDetailClient({ pack, topics, exercises }: PackDetailClientPr
           </aside>
 
           {/* Exercise list */}
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="flex-1 overflow-y-auto">
+            {/* Mobile collapsible topic filter */}
+            <div className="md:hidden border-b bg-white">
+              <button
+                onClick={() => setTopicsOpen((o) => !o)}
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-foreground"
+              >
+                <span className="flex items-center gap-2">
+                  <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                  {selectedTopicId === ""
+                    ? `Todos os exercícios (${exercises.length})`
+                    : `${topics.find((t) => t.id === selectedTopicId)?.title ?? "Tópico"}`}
+                </span>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", topicsOpen && "rotate-180")} />
+              </button>
+              {topicsOpen && (
+                <div className="border-t divide-y bg-white">
+                  <button
+                    onClick={() => { setSelectedTopicId(""); setTopicsOpen(false); }}
+                    className={cn(
+                      "w-full text-left px-4 py-3 text-sm font-medium transition-colors",
+                      selectedTopicId === "" ? "text-primary bg-primary/5" : "text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    Todos ({exercises.length})
+                  </button>
+                  {topics.map((topic) => {
+                    const count = exercises.filter((e) => e.topicId === topic.id).length;
+                    const active = selectedTopicId === topic.id;
+                    return (
+                      <button
+                        key={topic.id}
+                        onClick={() => { setSelectedTopicId(topic.id); setTopicsOpen(false); }}
+                        className={cn(
+                          "w-full text-left px-4 py-3 transition-colors",
+                          active ? "bg-primary/5" : "hover:bg-muted/50"
+                        )}
+                      >
+                        <p className={cn("text-sm font-medium", active ? "text-primary" : "text-foreground")}>{topic.title}</p>
+                        <p className="text-xs text-muted-foreground">{count} questões</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 md:p-6">
             <div className="max-w-2xl space-y-4">
               {(selectedTopicId === "" ? exercises : exercises.filter((e) => e.topicId === selectedTopicId))
                 .sort((a, b) => a.order - b.order)
                 .map((exercise, idx) => (
                   <ExerciseItem key={exercise.id} exercise={exercise} number={idx + 1} />
                 ))}
+            </div>
             </div>
           </main>
         </div>

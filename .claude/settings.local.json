@@ -13,7 +13,21 @@
       "Bash(Remove-Item -Recurse -Force \"D:\\\\Github\\\\Study platform\\\\app\\\\pacotes\")",
       "Bash(npm install *)",
       "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;\" + $env:PATH; cd \"D:\\\\Github\\\\Study platform\"; cmd /c \"node_modules\\\\.bin\\\\tsc.cmd --noEmit 2>&1\" | Where-Object { $_ -notmatch \"\\\\.next/types\" } | Select-Object -First 20)",
-      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;\" + $env:PATH; cd \"D:\\\\Github\\\\Study platform\"; cmd /c \"npm install server-only 2>&1\")"
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;\" + $env:PATH; cd \"D:\\\\Github\\\\Study platform\"; cmd /c \"npm install server-only 2>&1\")",
+      "Bash(npx vercel *)",
+      "Bash(C:\\\\Program Files\\\\nodejs\\\\npx.cmd tsc --noEmit)",
+      "Bash(mkdir -p \"D:/Github/Study platform/app/\\(admin\\)/grupos/novo\" \"D:/Github/Study platform/app/\\(admin\\)/grupos/[id]\" \"D:/Github/Study platform/app/convite/[token]\")",
+      "Bash(npx next *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh run *)",
+      "Bash(git add *)",
+      "WebFetch(domain:sia-plataforma.vercel.app)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(\"C:\\\\Program Files\\\\nodejs\\\\npx.cmd\" vercel --prod --yes)",
+      "PowerShell(cd \"D:\\\\Github\\\\Study platform\"; & \"$env:TEMP\\\\supabase.exe\" db execute --project-ref qkrzwcviofwsbuyrtzrr --file \"supabase\\\\migrations\\\\001-groups.sql\" 2>&1)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Github\\\\Study platform\\\\app\" -Recurse -Include \"*.ts\", \"*.tsx\", \"*.js\", \"*.jsx\")",
+      "Bash(Select-Object -First 5)"
     ]
   }
 }
