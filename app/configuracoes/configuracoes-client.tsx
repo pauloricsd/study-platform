@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { Sparkles, Loader2, User, Lock, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, Loader2, User, Lock, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { updateProfile, updatePassword } from "./actions";
@@ -104,6 +105,13 @@ export function ConfiguracoesClient({ name, email, role, initials, color }: Prop
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30">
       <header className="sticky top-0 z-40 flex h-16 items-center border-b bg-white/95 backdrop-blur px-4 lg:px-6 gap-3">
+        <Link
+          href={role === "student" ? "/estudar" : "/"}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mr-1"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Link>
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
           <Sparkles className="h-3.5 w-3.5 text-white" />
         </div>

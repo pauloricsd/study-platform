@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Topbar } from "@/components/layout/topbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,7 +169,17 @@ export default function NovoPacotePage() {
 
   return (
     <>
-      <Topbar title="Criar pacote" />
+      <Topbar
+        title="Criar pacote"
+        action={
+          step === 1 ? (
+            <Link href="/pacotes" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
+            </Link>
+          ) : undefined
+        }
+      />
 
       <main className="p-6">
         {/* Step indicator */}
