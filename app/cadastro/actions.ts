@@ -29,6 +29,8 @@ export async function signup(
   const name = (formData.get("name") as string)?.trim();
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const role = (formData.get("role") as string) === "student" ? "student" : "admin";
+  const redirectTo = (formData.get("redirect") as string) || "";
 
   if (!name || !email || !password) {
     return { error: "Preencha todos os campos." };
@@ -41,7 +43,7 @@ export async function signup(
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { role: "admin", name } },
+    options: { data: { role, name } },
   });
 
   if (error) {
@@ -60,9 +62,14 @@ export async function signup(
       .eq("id", data.user.id);
   }
 
+  // Email confirmation required
   if (!data.session) {
-    redirect("/cadastro/confirmar");
+    const confirmUrl = redirectTo
+      ? `/cadastro/confirmar?redirect=${encodeURIComponent(redirectTo)}`
+      : "/cadastro/confirmar";
+    redirect(confirmUrl);
   }
 
-  redirect("/");
+  // Logged in immediately — go to redirect target or default home
+  redirect(redirectTo || (role === "student" ? "/estudar" : "/"));
 }

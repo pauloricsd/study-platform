@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { signup } from "./actions";
 import { Sparkles, Loader2, Mail, Lock, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function CadastroPage() {
   const [state, formAction, isPending] = useActionState(signup, null);
+  const searchParams = useSearchParams();
+  const role = searchParams.get("role") === "student" ? "student" : "admin";
+  const redirectTo = searchParams.get("redirect") ?? "";
+
+  const isStudent = role === "student";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 flex items-center justify-center p-4">
@@ -26,13 +32,20 @@ export default function CadastroPage() {
         {/* Card */}
         <div className="rounded-2xl border bg-white shadow-sm p-6 space-y-5">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Criar conta</h2>
+            <h2 className="text-lg font-semibold text-foreground">
+              {isStudent ? "Criar conta de aluno" : "Criar conta"}
+            </h2>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Cadastro para professores e responsáveis
+              {isStudent
+                ? "Crie sua conta para acessar os materiais de estudo"
+                : "Cadastro para professores e responsáveis"}
             </p>
           </div>
 
           <form action={formAction} className="space-y-4">
+            <input type="hidden" name="role" value={role} />
+            {redirectTo && <input type="hidden" name="redirect" value={redirectTo} />}
+
             {/* Name */}
             <div className="space-y-1.5">
               <label htmlFor="name" className="text-sm font-medium text-foreground">
@@ -46,7 +59,7 @@ export default function CadastroPage() {
                   type="text"
                   autoComplete="name"
                   required
-                  placeholder="Seu nome"
+                  placeholder={isStudent ? "Seu nome" : "Seu nome"}
                   className={cn(
                     "flex h-10 w-full rounded-lg border bg-transparent pl-9 pr-3 py-1 text-sm shadow-sm transition-colors",
                     "placeholder:text-muted-foreground",
@@ -134,6 +147,8 @@ export default function CadastroPage() {
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Criando conta...
                 </>
+              ) : isStudent ? (
+                "Criar conta e entrar"
               ) : (
                 "Criar conta"
               )}
@@ -143,7 +158,10 @@ export default function CadastroPage() {
 
         <p className="text-center text-xs text-muted-foreground mt-6">
           Já tem uma conta?{" "}
-          <Link href="/login" className="text-primary hover:underline">
+          <Link
+            href={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : "/login"}
+            className="text-primary hover:underline"
+          >
             Entrar
           </Link>
         </p>

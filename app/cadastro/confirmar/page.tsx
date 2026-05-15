@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { Sparkles, MailCheck } from "lucide-react";
 
-export default function ConfirmarEmailPage() {
+export default async function ConfirmarEmailPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirect?: string }>;
+}) {
+  const { redirect: redirectTo } = await searchParams;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
@@ -21,13 +27,36 @@ export default function ConfirmarEmailPage() {
             <p className="text-sm text-muted-foreground mt-1.5">
               Enviamos um link de confirmação para o seu e-mail. Clique no link para ativar sua conta.
             </p>
+            {redirectTo && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Após confirmar, volte ao link do convite para entrar no grupo.
+              </p>
+            )}
           </div>
-          <Link
-            href="/login"
-            className="block w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center hover:bg-primary/90 transition-colors"
-          >
-            Ir para o login
-          </Link>
+
+          {redirectTo ? (
+            <div className="space-y-2">
+              <Link
+                href={`/login?redirect=${encodeURIComponent(redirectTo)}`}
+                className="block w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center hover:bg-primary/90 transition-colors"
+              >
+                Já confirmei — fazer login
+              </Link>
+              <Link
+                href={redirectTo}
+                className="block w-full h-10 rounded-lg border text-sm font-medium flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground"
+              >
+                Voltar ao convite
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="block w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center hover:bg-primary/90 transition-colors"
+            >
+              Ir para o login
+            </Link>
+          )}
         </div>
       </div>
     </div>

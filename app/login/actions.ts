@@ -9,6 +9,7 @@ export async function login(
 ): Promise<{ error: string }> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const redirectTo = (formData.get("redirect") as string) || "";
 
   if (!email || !password) {
     return { error: "Preencha e-mail e senha." };
@@ -30,19 +31,18 @@ export async function login(
 
   if (!user) return { error: "Erro ao autenticar. Tente novamente." };
 
+  // If there's a redirect param, honour it (e.g. /convite/[token])
+  if (redirectTo) redirect(redirectTo);
+
   const profileResult = await supabase
     .from("profiles")
-    .select("*")
+    .select("role")
     .eq("id", user.id)
     .single();
 
   const profile = profileResult.data as { role: string } | null;
 
-  if (profile?.role === "student") {
-    redirect("/estudar");
-  }
-
-  redirect("/");
+  redirect(profile?.role === "student" ? "/estudar" : "/");
 }
 
 export async function logout() {
