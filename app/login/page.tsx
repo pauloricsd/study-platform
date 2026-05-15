@@ -5,13 +5,14 @@ import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { login } from "./actions";
 import Link from "next/link";
-import { Sparkles, Loader2, Mail, Lock } from "lucide-react";
+import { Sparkles, Loader2, Mail, Lock, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function LoginForm() {
   const [state, formAction, isPending] = useActionState(login, null);
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") ?? "";
+  const msg = searchParams.get("msg");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 flex items-center justify-center p-4">
@@ -98,6 +99,13 @@ function LoginForm() {
               </div>
             </div>
 
+            {/* Success msg */}
+            {msg === "senha_atualizada" && (
+              <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0" /> Senha atualizada! Faça login com a nova senha.
+              </p>
+            )}
+
             {/* Error */}
             {state?.error && (
               <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
@@ -127,7 +135,13 @@ function LoginForm() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
+        <p className="text-center text-xs text-muted-foreground mt-4">
+          <Link href="/recuperar-senha" className="text-primary hover:underline">
+            Esqueci minha senha
+          </Link>
+        </p>
+
+        <p className="text-center text-xs text-muted-foreground mt-2">
           Ainda não tem conta?{" "}
           <Link href="/cadastro" className="text-primary hover:underline">
             Criar conta de administrador

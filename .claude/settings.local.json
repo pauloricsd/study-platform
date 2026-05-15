@@ -27,7 +27,10 @@
       "Bash(\"C:\\\\Program Files\\\\nodejs\\\\npx.cmd\" vercel --prod --yes)",
       "PowerShell(cd \"D:\\\\Github\\\\Study platform\"; & \"$env:TEMP\\\\supabase.exe\" db execute --project-ref qkrzwcviofwsbuyrtzrr --file \"supabase\\\\migrations\\\\001-groups.sql\" 2>&1)",
       "Bash(Get-ChildItem -Path \"D:\\\\Github\\\\Study platform\\\\app\" -Recurse -Include \"*.ts\", \"*.tsx\", \"*.js\", \"*.jsx\")",
-      "Bash(Select-Object -First 5)"
+      "Bash(Select-Object -First 5)",
+      "Bash(git restore *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Github\\\\Study platform\" -Recurse -Filter \"sidebar*\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -First 20)"
     ]
   }
 }
