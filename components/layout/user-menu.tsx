@@ -7,15 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { logout } from "@/app/login/actions";
 import { Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUserProfile } from "./user-profile-context";
 
-interface UserMenuProps {
-  name: string;
-  initials: string;
-  color: string | null;
-  role: string;
-}
-
-export function UserMenu({ name, initials, color, role }: UserMenuProps) {
+export function UserMenu() {
+  const { name, initials, color, role } = useUserProfile();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -42,7 +37,6 @@ export function UserMenu({ name, initials, color, role }: UserMenuProps) {
 
       {open && (
         <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border bg-white shadow-lg z-50 overflow-hidden">
-          {/* Identity */}
           <div className="px-4 py-3 border-b">
             <p className="text-sm font-semibold text-foreground truncate">{name}</p>
             <Badge variant="secondary" className="mt-1 text-[10px] h-4">
@@ -50,7 +44,6 @@ export function UserMenu({ name, initials, color, role }: UserMenuProps) {
             </Badge>
           </div>
 
-          {/* Actions */}
           <div className="py-1">
             <Link
               href="/configuracoes"

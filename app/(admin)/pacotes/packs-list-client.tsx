@@ -3,7 +3,6 @@
 import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Topbar } from "@/components/layout/topbar";
 import { StudyPackCard } from "@/components/dashboard/study-pack-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,20 +121,7 @@ export function PacksListClient({ packs }: PacksListClientProps) {
   }, [activePacks, activeTab, search]);
 
   return (
-    <>
-      <Topbar
-        title="Pacotes de Estudo"
-        action={
-          <Button size="sm" className="gap-2" asChild>
-            <Link href="/pacotes/novo">
-              <Plus className="h-4 w-4" />
-              Novo pacote
-            </Link>
-          </Button>
-        }
-      />
-
-      <main className="p-6 space-y-6">
+    <main className="p-6 space-y-6">
         {/* Stats — only shown for active packs */}
         {activeTab !== "archived" && (
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -277,8 +263,7 @@ export function PacksListClient({ packs }: PacksListClientProps) {
             </div>
           )
         )}
-      </main>
-    </>
+    </main>
   );
 }
 
