@@ -223,7 +223,7 @@ export type Database = {
       group_admins: {
         Row: { group_id: string; admin_id: string; added_at: string };
         Insert: { group_id: string; admin_id: string; added_at?: string };
-        Update: Record<string, never>;
+        Update: { added_at?: string };
       };
       group_members: {
         Row: { group_id: string; student_id: string; status: "active" | "inactive"; joined_at: string };
@@ -263,7 +263,7 @@ export type Database = {
       group_assignments: {
         Row: { group_id: string; pack_id: string; assigned_by: string | null; assigned_at: string };
         Insert: { group_id: string; pack_id: string; assigned_by?: string | null; assigned_at?: string };
-        Update: Record<string, never>;
+        Update: { assigned_by?: string | null };
       };
       topic_progress: {
         Row: {
