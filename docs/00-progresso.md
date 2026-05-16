@@ -111,10 +111,10 @@ _Planejada. Ver [PRD seção 14](./01-prd-principal.md#14-roadmap)._
 
 ## Fase 3 — Acompanhamento e revisão
 
-- [ ] Relatórios para pais/professores
-- [ ] Recomendações automáticas de revisão
-- [ ] Histórico de tentativas por exercício
-- [ ] Mapa de dificuldades por tópico
+- [x] **Relatórios para pais/professores** — página `/relatorios` com visão geral de todos os alunos: média, tópicos concluídos, atividade, distribuição de desempenho; link para detalhe individual
+- [x] **Recomendações automáticas de revisão** — seção "Recomendado para você" na home do aluno; lógica: tópicos com nota < 60% (revisar) + tópicos não iniciados com prova próxima (≤ 14 dias); ordenados por urgência
+- [x] **Histórico de tentativas por exercício** — página `/estudar/historico/[topicId]` com todas as tentativas por questão; botão "Tentativas" em cada tópico na página de revisão; exibe data, resposta, resultado e se o gabarito foi revelado
+- [x] **Mapa de dificuldades por tópico** — grid heatmap na aba Relatório do pacote admin; células coloridas (verde/âmbar/vermelho) por combinação aluno × tópico; legenda e legenda de tópicos numerados
 
 ---
 
@@ -127,4 +127,4 @@ _Planejada. Ver [PRD seção 14](./01-prd-principal.md#14-roadmap)._
 
 ---
 
-_Última atualização: 2026-05-16 — Fase 2 quase concluída. Pendente apenas: deploy em produção (Vercel + Supabase)._
+_Última atualização: 2026-05-16 — Fase 2 completa + deploy produção. Fase 3 completa._

@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Topbar } from "@/components/layout/topbar";
 import { getCurrentProfile } from "@/lib/data/auth";
 import { getStudentPacks } from "@/lib/data/packs";
+import { getTopicHistory } from "@/lib/data/progress";
+import { getTopicsByPack } from "@/lib/data/topics";
 import { subjectColors, getDaysUntilExam, getCompletionRate, getAccuracyRate } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import {
@@ -15,6 +17,9 @@ import {
   ChevronRight,
   Flame,
   Target,
+  Lightbulb,
+  AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 
 function getGreeting() {
@@ -24,12 +29,84 @@ function getGreeting() {
   return "Boa noite";
 }
 
+interface Recommendation {
+  topicId: string;
+  topicTitle: string;
+  packId: string;
+  packTitle: string;
+  subject: string;
+  score: number;        // -1 = not started
+  daysUntilExam: number | null;
+  reason: "urgent_not_started" | "review" | "not_started";
+}
+
 export default async function StudentHome() {
   const profile = await getCurrentProfile();
 
   const myPacks = profile
     ? await getStudentPacks(profile.id)
     : [];
+
+  // ── Recommendations ──────────────────────────────────────────────────────────
+  const [topicsByPackArr, topicHistory] = profile
+    ? await Promise.all([
+        Promise.all(myPacks.map((p) => getTopicsByPack(p.id).then((topics) => ({ packId: p.id, topics })))),
+        getTopicHistory(profile.id),
+      ])
+    : [[], []];
+
+  const historyMap = new Map(topicHistory.map((h) => [h.topicId, h]));
+  const packMap = new Map(myPacks.map((p) => [p.id, p]));
+
+  const recommendations: Recommendation[] = [];
+  for (const { packId, topics } of topicsByPackArr) {
+    const pack = packMap.get(packId);
+    if (!pack) continue;
+    const days = getDaysUntilExam(pack.examDate);
+
+    for (const topic of topics) {
+      const h = historyMap.get(topic.id);
+      if (!h || h.attempts === 0) {
+        // Not started — only recommend if exam is within 14 days
+        if (days !== null && days <= 14 && days > 0) {
+          recommendations.push({
+            topicId: topic.id,
+            topicTitle: topic.title,
+            packId,
+            packTitle: pack.title,
+            subject: pack.subject,
+            score: -1,
+            daysUntilExam: days,
+            reason: "urgent_not_started",
+          });
+        }
+      } else if (h.score < 60) {
+        // Low score — needs review
+        recommendations.push({
+          topicId: topic.id,
+          topicTitle: topic.title,
+          packId,
+          packTitle: pack.title,
+          subject: pack.subject,
+          score: h.score,
+          daysUntilExam: days,
+          reason: "review",
+        });
+      }
+    }
+  }
+
+  // Sort: urgent_not_started first (by days), then review (by score asc), then not_started
+  const reasonOrder = { urgent_not_started: 0, review: 1, not_started: 2 } as const;
+  recommendations.sort((a, b) => {
+    const diff = reasonOrder[a.reason] - reasonOrder[b.reason];
+    if (diff !== 0) return diff;
+    if (a.reason === "urgent_not_started") return (a.daysUntilExam ?? 99) - (b.daysUntilExam ?? 99);
+    return a.score - b.score; // lower score = more urgent
+  });
+  const topRecs = recommendations.slice(0, 4);
+
+  // ─────────────────────────────────────────────────────────────────────────────
 
   const continuePack = [...myPacks]
     .filter((p) => getCompletionRate(p.progress) < 100)
@@ -229,6 +306,76 @@ export default async function StudentHome() {
             </div>
           ))}
         </section>
+
+        {/* Recommendations */}
+        {topRecs.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Recomendado para você
+              </h2>
+            </div>
+            <div className="space-y-2">
+              {topRecs.map((rec) => (
+                <Link
+                  key={rec.topicId}
+                  href={`/estudar/${rec.packId}/topico/${rec.topicId}`}
+                  className="block"
+                >
+                  <div
+                    className={cn(
+                      "rounded-2xl border bg-white px-4 py-3 flex items-center gap-3 transition-all hover:shadow-sm",
+                      rec.reason === "urgent_not_started" && "border-amber-200/70",
+                      rec.reason === "review" && "border-red-200/60"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
+                        rec.reason === "urgent_not_started" ? "bg-amber-100" : "bg-red-50"
+                      )}
+                    >
+                      {rec.reason === "urgent_not_started" ? (
+                        <Flame className="h-4 w-4 text-amber-600" />
+                      ) : (
+                        <RotateCcw className="h-4 w-4 text-red-500" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span
+                          className={cn(
+                            "inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium shrink-0",
+                            (subjectColors as Record<string, string>)[rec.subject] ?? "bg-slate-100 text-slate-700 border-slate-200"
+                          )}
+                        >
+                          {rec.subject}
+                        </span>
+                        {rec.reason === "urgent_not_started" && rec.daysUntilExam !== null && (
+                          <span className="text-[10px] text-amber-700 font-medium">
+                            Prova em {rec.daysUntilExam}d
+                          </span>
+                        )}
+                        {rec.reason === "review" && (
+                          <span className="text-[10px] text-red-600 font-medium flex items-center gap-0.5">
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            {rec.score}% — revisar
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {rec.topicTitle}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{rec.packTitle}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* All packs */}
         <section className="space-y-3">

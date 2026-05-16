@@ -19,6 +19,7 @@ import {
   Home,
   Compass,
   RotateCcw,
+  BarChart2,
 } from "lucide-react";
 
 export type SidebarVariant = "admin" | "student";
@@ -37,6 +38,7 @@ const adminNav: NavItem[] = [
   { href: "/alunos", label: "Alunos", icon: Users },
   { href: "/grupos", label: "Grupos", icon: UsersRound },
   { href: "/materiais", label: "Materiais", icon: FileText },
+  { href: "/relatorios", label: "Relatórios", icon: BarChart2 },
 ];
 
 const studentNav: NavItem[] = [

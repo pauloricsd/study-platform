@@ -30,7 +30,21 @@
       "Bash(Select-Object -First 5)",
       "Bash(git restore *)",
       "Bash(Get-ChildItem -Path \"D:\\\\Github\\\\Study platform\" -Recurse -Filter \"sidebar*\" -ErrorAction SilentlyContinue)",
-      "Bash(Select-Object -First 20)"
+      "Bash(Select-Object -First 20)",
+      "Bash(npx tsc *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Github\\\\Study platform\" -Recurse -Name)",
+      "Bash(Select-Object -First 30)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Github\\\\Study platform\\\\app\\\\estudar\" -Recurse -Filter \"*.tsx\")",
+      "Bash(Select-Object FullName)",
+      "Bash(supabase db *)",
+      "Bash(supabase.exe db *)",
+      "Bash(vercel --prod)",
+      "Bash(git reset *)",
+      "Bash(dir \"D:\\\\Github\\\\Study platform\\\\app\\\\\\(admin\\)\\\\pacotes\" /s /b)",
+      "Bash(vercel whoami *)",
+      "Bash(vercel ls *)",
+      "Bash(vercel --prod --yes)",
+      "Bash(Get-ChildItem -Path . -Directory)"
     ]
   }
 }

@@ -20,6 +20,7 @@ import {
   BookOpen,
   Target,
   Calendar,
+  History,
 } from "lucide-react";
 
 function formatDate(iso: string | null): string {
@@ -209,25 +210,37 @@ export default async function HistoricoPage() {
                             )}
                           </div>
 
-                          <Link
-                            href={`/estudar/${pack.id}/topico/${topic.id}`}
-                            className={cn(
-                              "flex items-center gap-1.5 shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition-colors",
-                              status === "review"
-                                ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-                                : status === "completed"
-                                ? "bg-muted text-muted-foreground hover:bg-muted/80"
-                                : "bg-primary/10 text-primary hover:bg-primary/20"
+                          <div className="flex items-center gap-2 shrink-0">
+                            {h.attempts > 0 && (
+                              <Link
+                                href={`/estudar/historico/${topic.id}`}
+                                className="flex items-center gap-1 rounded-lg px-2.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                                title="Ver tentativas"
+                              >
+                                <History className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Tentativas</span>
+                              </Link>
                             )}
-                          >
-                            {status === "review" ? (
-                              <><RotateCcw className="h-3.5 w-3.5" />Revisar</>
-                            ) : status === "completed" ? (
-                              <><RotateCcw className="h-3.5 w-3.5" />Refazer</>
-                            ) : (
-                              <><PlayCircle className="h-3.5 w-3.5" />Estudar</>
-                            )}
-                          </Link>
+                            <Link
+                              href={`/estudar/${pack.id}/topico/${topic.id}`}
+                              className={cn(
+                                "flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors",
+                                status === "review"
+                                  ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                                  : status === "completed"
+                                  ? "bg-muted text-muted-foreground hover:bg-muted/80"
+                                  : "bg-primary/10 text-primary hover:bg-primary/20"
+                              )}
+                            >
+                              {status === "review" ? (
+                                <><RotateCcw className="h-3.5 w-3.5" />Revisar</>
+                              ) : status === "completed" ? (
+                                <><RotateCcw className="h-3.5 w-3.5" />Refazer</>
+                              ) : (
+                                <><PlayCircle className="h-3.5 w-3.5" />Estudar</>
+                              )}
+                            </Link>
+                          </div>
                         </div>
                       );
                     })}

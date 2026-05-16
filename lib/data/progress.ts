@@ -34,6 +34,79 @@ export async function getTopicHistory(studentId: string): Promise<TopicHistory[]
   }));
 }
 
+// ─── Exercise attempt history ──────────────────────────────────────────────────
+
+export interface ExerciseAttempt {
+  exerciseId: string;
+  statement: string;
+  type: string;
+  attemptNumber: number;
+  userAnswer: string | null;
+  isCorrect: boolean | null;
+  wasRevealed: boolean;
+  answeredAt: string;
+}
+
+export async function getExerciseHistory(
+  studentId: string,
+  topicId: string
+): Promise<ExerciseAttempt[]> {
+  if (!SUPABASE_CONFIGURED) return [];
+
+  const supabase = await db();
+
+  // Step 1: exercises in this topic (ordered)
+  const { data: exercises } = await supabase
+    .from("exercises")
+    .select("id, statement, type")
+    .eq("topic_id", topicId)
+    .order("order");
+
+  if (!exercises || exercises.length === 0) return [];
+
+  const exerciseIds = (exercises as { id: string; statement: string; type: string }[]).map(
+    (e) => e.id
+  );
+  const exerciseMap = new Map(
+    (exercises as { id: string; statement: string; type: string }[]).map((e) => [
+      e.id,
+      { statement: e.statement, type: e.type },
+    ])
+  );
+
+  // Step 2: responses for those exercises by this student
+  const { data: responses } = await supabase
+    .from("exercise_responses")
+    .select("exercise_id, attempt_number, user_answer, is_correct, was_revealed, answered_at")
+    .eq("student_id", studentId)
+    .in("exercise_id", exerciseIds)
+    .order("answered_at", { ascending: false });
+
+  if (!responses) return [];
+
+  return (
+    responses as {
+      exercise_id: string;
+      attempt_number: number;
+      user_answer: string | null;
+      is_correct: boolean | null;
+      was_revealed: boolean | null;
+      answered_at: string;
+    }[]
+  ).map((r) => ({
+    exerciseId: r.exercise_id,
+    statement: exerciseMap.get(r.exercise_id)?.statement ?? "",
+    type: exerciseMap.get(r.exercise_id)?.type ?? "",
+    attemptNumber: r.attempt_number,
+    userAnswer: r.user_answer,
+    isCorrect: r.is_correct,
+    wasRevealed: r.was_revealed ?? false,
+    answeredAt: r.answered_at,
+  }));
+}
+
+// ─── Save responses ─────────────────────────────────────────────────────────────
+
 export interface ExerciseResponseInput {
   studentId: string;
   exerciseId: string;

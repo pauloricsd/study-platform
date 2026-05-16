@@ -29,10 +29,18 @@ export interface StudentPackStat {
   lastActiveAt: string | null;
 }
 
+// per-student × per-topic score for the difficulty heatmap
+export interface DifficultyEntry {
+  studentId: string;
+  topicId: string;
+  score: number; // -1 = not attempted
+}
+
 export interface PackReport {
   topicStats: TopicStat[];
   worstExercises: ExerciseStat[];  // top 5 with highest error rate (min 2 responses)
   studentStats: StudentPackStat[];
+  difficultyMap: DifficultyEntry[];
 }
 
 async function db() {
@@ -45,7 +53,7 @@ export async function getPackReport(
   topics: { id: string; title: string }[]
 ): Promise<PackReport> {
   if (!SUPABASE_CONFIGURED || topics.length === 0) {
-    return { topicStats: [], worstExercises: [], studentStats: [] };
+    return { topicStats: [], worstExercises: [], studentStats: [], difficultyMap: [] };
   }
 
   const topicIds = topics.map((t) => t.id);
@@ -177,5 +185,94 @@ export async function getPackReport(
     };
   });
 
-  return { topicStats, worstExercises, studentStats };
+  // --- Difficulty map ---
+  const difficultyMap: DifficultyEntry[] = studentPackData.flatMap((sp) => {
+    return topics.map((t) => {
+      const row = progressData.find(
+        (p) => p.student_id === sp.student_id && p.topic_id === t.id
+      );
+      return {
+        studentId: sp.student_id,
+        topicId: t.id,
+        score: row ? (row.score ?? 0) : -1,
+      };
+    });
+  });
+
+  return { topicStats, worstExercises, studentStats, difficultyMap };
+}
+
+// ─── Admin overview report ─────────────────────────────────────────────────────
+
+export interface StudentOverview {
+  studentId: string;
+  name: string;
+  grade: string;
+  initials: string | null;
+  color: string | null;
+  packsAssigned: number;
+  avgScore: number;       // 0-100, or -1 if no attempts
+  topicsCompleted: number;
+  totalTopicsAttempted: number;
+  lastActiveAt: string | null;
+}
+
+export async function getAdminReport(): Promise<StudentOverview[]> {
+  if (!SUPABASE_CONFIGURED) return [];
+
+  const supabase = await db();
+
+  const [studentsResult, packsResult, progressResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, name, grade, avatar_initials, avatar_color")
+      .eq("role", "student")
+      .order("name"),
+
+    supabase
+      .from("student_packs")
+      .select("student_id, pack_id"),
+
+    supabase
+      .from("topic_progress")
+      .select("student_id, topic_id, score, last_attempt_at"),
+  ]);
+
+  type ProfileRow = { id: string; name: string; grade: string | null; avatar_initials: string | null; avatar_color: string | null };
+  type PackRow    = { student_id: string; pack_id: string };
+  type ProgRow    = { student_id: string; topic_id: string; score: number | null; last_attempt_at: string | null };
+
+  const students = (studentsResult.data ?? []) as ProfileRow[];
+  const packs    = (packsResult.data ?? [])    as PackRow[];
+  const progress = (progressResult.data ?? []) as ProgRow[];
+
+  return students.map((s) => {
+    const myPacks    = packs.filter((p) => p.student_id === s.id);
+    const myProgress = progress.filter((p) => p.student_id === s.id);
+
+    const avgScore =
+      myProgress.length > 0
+        ? Math.round(myProgress.reduce((sum, p) => sum + (p.score ?? 0), 0) / myProgress.length)
+        : -1;
+
+    const topicsCompleted = myProgress.filter((p) => (p.score ?? 0) >= 60).length;
+
+    const dates = myProgress
+      .map((p) => p.last_attempt_at)
+      .filter((d): d is string => !!d);
+    const lastActiveAt = dates.length > 0 ? dates.sort().at(-1) ?? null : null;
+
+    return {
+      studentId: s.id,
+      name: s.name,
+      grade: s.grade ?? "",
+      initials: s.avatar_initials,
+      color: s.avatar_color,
+      packsAssigned: myPacks.length,
+      avgScore,
+      topicsCompleted,
+      totalTopicsAttempted: myProgress.length,
+      lastActiveAt,
+    };
+  });
 }

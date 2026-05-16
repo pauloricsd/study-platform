@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type StudyPack, mockStudents, getCompletionRate, getAccuracyRate } from "@/lib/mock-data";
 import { type Topic, type Exercise, sectionTypeConfig } from "@/lib/mock-topics";
-import { type PackReport } from "@/lib/data/reports";
+import { type PackReport, type DifficultyEntry } from "@/lib/data/reports";
 import { cn } from "@/lib/utils";
 import {
   BookOpen,
@@ -21,6 +21,7 @@ import {
   Target,
   TrendingUp,
   TrendingDown,
+  Grid3X3,
 } from "lucide-react";
 
 const tabs = [
@@ -421,6 +422,119 @@ export function PackDetailClient({ pack, topics, exercises, report }: PackDetail
                             </div>
                           </div>
                         ))}
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* Difficulty heatmap */}
+                {report.difficultyMap && report.studentStats.length > 0 && topics.length > 0 && (
+                  <section>
+                    <div className="rounded-xl border bg-white p-5 overflow-x-auto">
+                      <h3 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
+                        <Grid3X3 className="h-4 w-4 text-muted-foreground" />
+                        Mapa de dificuldades
+                      </h3>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Desempenho de cada aluno por tópico
+                      </p>
+
+                      {/* Legend */}
+                      <div className="flex items-center gap-3 mb-4 flex-wrap">
+                        {[
+                          { label: "≥ 70%", bg: "bg-emerald-500" },
+                          { label: "40–69%", bg: "bg-amber-400" },
+                          { label: "< 40%", bg: "bg-red-400" },
+                          { label: "Não tentou", bg: "bg-muted" },
+                        ].map(({ label, bg }) => (
+                          <div key={label} className="flex items-center gap-1.5">
+                            <div className={cn("h-3 w-3 rounded", bg)} />
+                            <span className="text-[10px] text-muted-foreground">{label}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="min-w-max">
+                        {/* Header row: topic abbreviations */}
+                        <div className="flex items-end gap-1 mb-1 pl-32">
+                          {topics.map((t, i) => (
+                            <div
+                              key={t.id}
+                              className="w-9 text-center"
+                              title={t.title}
+                            >
+                              <span className="text-[10px] text-muted-foreground font-medium">
+                                T{i + 1}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Rows */}
+                        {report.studentStats.map((student) => (
+                          <div key={student.studentId} className="flex items-center gap-1 mb-1">
+                            {/* Student name */}
+                            <div className="w-32 shrink-0 flex items-center gap-2 pr-2">
+                              <div
+                                className={cn(
+                                  "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white",
+                                  student.avatarColor ?? "bg-muted-foreground"
+                                )}
+                              >
+                                {student.avatarInitials ?? student.name.slice(0, 2).toUpperCase()}
+                              </div>
+                              <span className="text-xs text-foreground truncate font-medium">
+                                {student.name.split(" ")[0]}
+                              </span>
+                            </div>
+
+                            {/* Cells */}
+                            {topics.map((t) => {
+                              const entry = report.difficultyMap.find(
+                                (d: DifficultyEntry) =>
+                                  d.studentId === student.studentId && d.topicId === t.id
+                              );
+                              const score = entry?.score ?? -1;
+
+                              return (
+                                <div
+                                  key={t.id}
+                                  className={cn(
+                                    "w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-bold transition-colors",
+                                    score === -1
+                                      ? "bg-muted/50 text-muted-foreground/40"
+                                      : score >= 70
+                                      ? "bg-emerald-100 text-emerald-800"
+                                      : score >= 40
+                                      ? "bg-amber-100 text-amber-800"
+                                      : "bg-red-100 text-red-700"
+                                  )}
+                                  title={`${student.name} · ${t.title}: ${score === -1 ? "não tentou" : `${score}%`}`}
+                                >
+                                  {score === -1 ? "—" : `${score}`}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ))}
+
+                        {/* Topic titles footer */}
+                        <div className="flex items-start gap-1 mt-2 pl-32">
+                          {topics.map((t, i) => (
+                            <div key={t.id} className="w-9 text-center" title={t.title}>
+                              <span className="text-[9px] text-muted-foreground/60">T{i + 1}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Topic legend */}
+                        <div className="mt-3 space-y-0.5">
+                          {topics.map((t, i) => (
+                            <p key={t.id} className="text-[10px] text-muted-foreground">
+                              <span className="font-semibold">T{i + 1}</span> — {t.title}
+                            </p>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </section>
