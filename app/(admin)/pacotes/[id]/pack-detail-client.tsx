@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type StudyPack, mockStudents, getCompletionRate, getAccuracyRate } from "@/lib/mock-data";
 import { type Topic, type Exercise, sectionTypeConfig } from "@/lib/mock-topics";
+import { type PackReport } from "@/lib/data/reports";
 import { cn } from "@/lib/utils";
 import {
   BookOpen,
@@ -19,12 +20,14 @@ import {
   BarChart2,
   Target,
   TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 
 const tabs = [
   { id: "content", label: "Conteúdo", icon: BookOpen },
   { id: "exercises", label: "Exercícios", icon: CheckSquare },
   { id: "progress", label: "Progresso", icon: Users },
+  { id: "report", label: "Relatório", icon: BarChart2 },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -33,9 +36,10 @@ interface PackDetailClientProps {
   pack: StudyPack;
   topics: Topic[];
   exercises: Exercise[];
+  report: PackReport;
 }
 
-export function PackDetailClient({ pack, topics, exercises }: PackDetailClientProps) {
+export function PackDetailClient({ pack, topics, exercises, report }: PackDetailClientProps) {
   const [activeTab, setActiveTab] = useState<TabId>("content");
   const [selectedTopicId, setSelectedTopicId] = useState<string>(topics[0]?.id ?? "");
   const [topicsOpen, setTopicsOpen] = useState(false);
@@ -341,6 +345,152 @@ export function PackDetailClient({ pack, topics, exercises }: PackDetailClientPr
             </div>
             </div>
           </main>
+        </div>
+      )}
+
+      {/* Report tab */}
+      {activeTab === "report" && (
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-2xl space-y-6">
+            {report.topicStats.length === 0 && report.worstExercises.length === 0 && report.studentStats.length === 0 ? (
+              <div className="rounded-xl border border-dashed bg-muted/30 p-10 text-center">
+                <BarChart2 className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  Nenhum dado ainda — os relatórios aparecerão conforme os alunos estudam.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Topic performance */}
+                {report.topicStats.length > 0 && (
+                  <section>
+                    <div className="rounded-xl border bg-white p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-4">Desempenho por tópico</h3>
+                      <div className="space-y-3">
+                        {report.topicStats.map((stat) => (
+                          <div key={stat.topicId} className="space-y-1.5">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="font-medium text-foreground truncate mr-3">{stat.topicTitle}</span>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-muted-foreground">{stat.avgScore}%</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {stat.studentCount} {stat.studentCount === 1 ? "aluno" : "alunos"}
+                                </span>
+                              </div>
+                            </div>
+                            <Progress
+                              value={stat.avgScore}
+                              className={cn(
+                                "h-2",
+                                stat.avgScore >= 70
+                                  ? "[&>div]:bg-emerald-500"
+                                  : stat.avgScore >= 40
+                                  ? "[&>div]:bg-amber-500"
+                                  : "[&>div]:bg-red-500"
+                              )}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* Worst exercises */}
+                {report.worstExercises.length > 0 && (
+                  <section>
+                    <div className="rounded-xl border bg-white p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <TrendingDown className="h-4 w-4 text-red-500" />
+                        Questões com mais erros
+                      </h3>
+                      <div className="space-y-3">
+                        {report.worstExercises.map((ex) => (
+                          <div key={ex.exerciseId} className="flex items-start justify-between gap-3 py-2 border-b last:border-0">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-foreground line-clamp-2">{ex.statement}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{ex.topicTitle}</p>
+                            </div>
+                            <div className="shrink-0 flex flex-col items-end gap-1">
+                              <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">
+                                {Math.round(ex.errorRate * 100)}% erro
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {ex.totalResponses} {ex.totalResponses === 1 ? "resposta" : "respostas"}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* Student progress */}
+                {report.studentStats.length > 0 && (
+                  <section>
+                    <div className="rounded-xl border bg-white p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        Progresso por aluno
+                      </h3>
+                      <div className="divide-y">
+                        {report.studentStats.map((student) => (
+                          <div key={student.studentId} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                            <Avatar className="h-9 w-9 shrink-0">
+                              <AvatarFallback
+                                className={cn(
+                                  "text-xs font-bold",
+                                  student.avatarColor ?? "bg-muted text-muted-foreground"
+                                )}
+                              >
+                                {student.avatarInitials ?? student.name.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="font-medium text-foreground truncate">{student.name}</span>
+                                <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                                  {student.topicsCompleted}/{student.totalTopics} tópicos
+                                </span>
+                              </div>
+                              {student.avgScore === -1 ? (
+                                <p className="text-xs text-muted-foreground">Não iniciou</p>
+                              ) : (
+                                <>
+                                  <Progress
+                                    value={student.avgScore}
+                                    className={cn(
+                                      "h-1.5",
+                                      student.avgScore >= 70
+                                        ? "[&>div]:bg-emerald-500"
+                                        : student.avgScore >= 40
+                                        ? "[&>div]:bg-amber-500"
+                                        : "[&>div]:bg-red-500"
+                                    )}
+                                  />
+                                  {student.lastActiveAt && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Último acesso:{" "}
+                                      {new Date(student.lastActiveAt).toLocaleDateString("pt-BR", {
+                                        day: "2-digit",
+                                        month: "short",
+                                        year: "numeric",
+                                      })}
+                                    </p>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
 
