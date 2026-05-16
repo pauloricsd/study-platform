@@ -8,6 +8,7 @@ export interface SourceFileWithPack {
   storagePath: string;
   processingStatus: "pending" | "processing" | "done" | "error";
   uploadedAt: string;
+  signedUrl: string | null;
   pack: { id: string; title: string; subject: string };
 }
 
@@ -52,17 +53,30 @@ export async function getSourceFiles(): Promise<SourceFileWithPack[]> {
 
   if (!data) return [];
 
-  return data
-    .filter((row) => row.study_packs !== null)
-    .map((row) => ({
-      id: row.id,
-      fileName: row.file_name,
-      fileSize: row.file_size,
-      storagePath: row.storage_path,
-      processingStatus: row.processing_status,
-      uploadedAt: row.uploaded_at,
-      pack: row.study_packs!,
-    }));
+  const filtered = data.filter((row) => row.study_packs !== null);
+
+  // Batch-generate signed URLs (1 hour expiry)
+  const paths = filtered.map((row) => row.storage_path);
+  const { data: signedUrlsData } = await supabase.storage
+    .from("source-files")
+    .createSignedUrls(paths, 3600);
+
+  const signedUrlMap = new Map<string, string>(
+    (signedUrlsData ?? [])
+      .filter((u) => u.signedUrl)
+      .map((u) => [u.path, u.signedUrl])
+  );
+
+  return filtered.map((row) => ({
+    id: row.id,
+    fileName: row.file_name,
+    fileSize: row.file_size,
+    storagePath: row.storage_path,
+    processingStatus: row.processing_status,
+    uploadedAt: row.uploaded_at,
+    signedUrl: signedUrlMap.get(row.storage_path) ?? null,
+    pack: row.study_packs!,
+  }));
 }
 
 export async function getAllExercises(): Promise<ExerciseWithContext[]> {

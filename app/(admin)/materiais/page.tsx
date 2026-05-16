@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, Files, HelpCircle } from "lucide-react";
+import { FileText, Files, HelpCircle, ExternalLink, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Topbar } from "@/components/layout/topbar";
 import { cn } from "@/lib/utils";
@@ -170,7 +170,7 @@ export default async function MateriaisPage({
                   return (
                     <div
                       key={file.id}
-                      className="flex items-center gap-4 rounded-xl border bg-white px-4 py-3.5"
+                      className="flex items-center gap-4 rounded-xl border bg-white px-4 py-3.5 hover:shadow-sm transition-shadow"
                     >
                       {/* Icon */}
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -189,9 +189,12 @@ export default async function MateriaisPage({
                           >
                             {file.pack.subject}
                           </Badge>
-                          <span className="text-xs text-muted-foreground truncate">
+                          <Link
+                            href={`/pacotes/${file.pack.id}`}
+                            className="text-xs text-muted-foreground hover:text-primary hover:underline truncate"
+                          >
                             {file.pack.title}
-                          </span>
+                          </Link>
                           <span className="text-xs text-muted-foreground">
                             · {formatDate(file.uploadedAt)}
                           </span>
@@ -212,6 +215,17 @@ export default async function MateriaisPage({
                         >
                           {status.label}
                         </Badge>
+                        {file.signedUrl && (
+                          <a
+                            href={file.signedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 rounded-lg bg-muted px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            Abrir
+                          </a>
+                        )}
                       </div>
                     </div>
                   );
@@ -283,9 +297,10 @@ export default async function MateriaisPage({
                       ? exercise.statement.slice(0, 120) + "…"
                       : exercise.statement;
                   return (
-                    <div
+                    <Link
                       key={exercise.id}
-                      className="flex items-center gap-4 rounded-xl border bg-white px-4 py-3.5"
+                      href={`/pacotes/${exercise.pack.id}`}
+                      className="flex items-center gap-4 rounded-xl border bg-white px-4 py-3.5 hover:shadow-sm hover:border-primary/20 transition-all group"
                     >
                       {/* Type badge */}
                       <Badge
@@ -310,17 +325,20 @@ export default async function MateriaisPage({
                         </p>
                       </div>
 
-                      {/* Subject badge */}
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "shrink-0 text-[11px] px-1.5 py-0",
-                          subjectColor
-                        )}
-                      >
-                        {exercise.pack.subject}
-                      </Badge>
-                    </div>
+                      {/* Right */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[11px] px-1.5 py-0",
+                            subjectColor
+                          )}
+                        >
+                          {exercise.pack.subject}
+                        </Badge>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                      </div>
+                    </Link>
                   );
                 })}
               </div>
