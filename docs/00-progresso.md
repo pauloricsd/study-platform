@@ -127,4 +127,27 @@ _Planejada. Ver [PRD seção 14](./01-prd-principal.md#14-roadmap)._
 
 ---
 
-_Última atualização: 2026-05-16 — Fase 2 completa + deploy produção. Fase 3 completa._
+## Fase 5 — Tutor IA do Aluno
+
+_Especificação completa em [docs/08-tutor-ia-aluno.md](./08-tutor-ia-aluno.md)._
+
+### MVP
+
+- [ ] **Chat contextual durante estudo** — drawer/painel acessível nas telas de leitura de tópico; modo `study`; responde com base no conteúdo do StudyPack; dicas, exemplos, analogias, simplificação de linguagem
+- [ ] **Chat contextual durante exercícios** — modo `exercise`; aviso "Posso te ajudar a pensar, mas não vou te dar a resposta direta"; bloqueio de entrega de resposta direta
+- [ ] **Bloqueio de resposta direta** — detecta pedidos de gabarito/alternativa e redireciona para orientação pedagógica; registra `TutorSafetyEvent`
+- [ ] **Feedback baseado em erro** — analisa tentativa errada do aluno e orienta sem revelar gabarito; dica gradual; pergunta orientadora
+- [ ] **Estado de baixa confiança** — IA sinaliza quando não tem informação suficiente no material e orienta confirmar com professor/responsável
+- [ ] **Persistência de sessão e mensagens** — tabelas `tutor_sessions`, `tutor_messages`, `tutor_safety_events` no banco; histórico da conversa por tópico/questão
+- [ ] **Sugestões de entrada** — chips de prompt sugerido (ex: "Me dê uma dica", "Explique o enunciado") para facilitar a interação
+
+### Fora do MVP
+
+- Navegação livre na web / links externos
+- Memória entre diferentes estudos
+- Voz, análise emocional, tutoria adaptativa complexa
+- Relatórios de dúvidas para pais/professores (fase posterior)
+
+---
+
+_Última atualização: 2026-05-16 — Fases 2 e 3 completas. Fase 5 (Tutor IA) especificada, aguardando implementação._
