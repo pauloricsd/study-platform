@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SectionCard } from "@/components/pack/section-card";
 import { ExerciseItem } from "@/components/pack/exercise-item";
+import { SuggestedQuestionsTab } from "@/components/pack/suggested-questions-tab";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { type StudyPack, mockStudents, getCompletionRate, getAccuracyRate } from "@/lib/mock-data";
 import { type Topic, type Exercise, sectionTypeConfig } from "@/lib/mock-topics";
 import { type PackReport, type DifficultyEntry } from "@/lib/data/reports";
+import { type SuggestedQuestion } from "@/lib/data/suggestions";
 import { cn } from "@/lib/utils";
 import {
   BookOpen,
@@ -22,11 +24,13 @@ import {
   TrendingUp,
   TrendingDown,
   Grid3X3,
+  Sparkles,
 } from "lucide-react";
 
 const tabs = [
   { id: "content", label: "Conteúdo", icon: BookOpen },
   { id: "exercises", label: "Exercícios", icon: CheckSquare },
+  { id: "suggestions", label: "Sugestões IA", icon: Sparkles },
   { id: "progress", label: "Progresso", icon: Users },
   { id: "report", label: "Relatório", icon: BarChart2 },
 ] as const;
@@ -38,9 +42,10 @@ interface PackDetailClientProps {
   topics: Topic[];
   exercises: Exercise[];
   report: PackReport;
+  suggestedQuestions: SuggestedQuestion[];
 }
 
-export function PackDetailClient({ pack, topics, exercises, report }: PackDetailClientProps) {
+export function PackDetailClient({ pack, topics, exercises, report, suggestedQuestions }: PackDetailClientProps) {
   const [activeTab, setActiveTab] = useState<TabId>("content");
   const [selectedTopicId, setSelectedTopicId] = useState<string>(topics[0]?.id ?? "");
   const [topicsOpen, setTopicsOpen] = useState(false);
@@ -78,6 +83,17 @@ export function PackDetailClient({ pack, topics, exercises, report }: PackDetail
                   {exercises.length}
                 </span>
               )}
+              {id === "suggestions" && (() => {
+                const pending = suggestedQuestions.filter((s) => s.status === "suggested").length;
+                return pending > 0 ? (
+                  <span className={cn(
+                    "rounded-full px-1.5 py-0.5 text-xs font-semibold leading-none",
+                    activeTab === id ? "bg-violet-100 text-violet-600" : "bg-violet-50 text-violet-500"
+                  )}>
+                    {pending}
+                  </span>
+                ) : null;
+              })()}
             </button>
           ))}
         </div>
@@ -346,6 +362,13 @@ export function PackDetailClient({ pack, topics, exercises, report }: PackDetail
             </div>
             </div>
           </main>
+        </div>
+      )}
+
+      {/* Suggestions tab */}
+      {activeTab === "suggestions" && (
+        <div className="flex-1 overflow-y-auto bg-gray-50">
+          <SuggestedQuestionsTab packId={pack.id} initialSuggestions={suggestedQuestions} />
         </div>
       )}
 

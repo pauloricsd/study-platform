@@ -162,6 +162,9 @@ export type Database = {
           max_attempts: number | null;
           hide_correct_answer_during_retry: boolean | null;
           acceptance_criteria: string | null;
+          difficulty: "easy" | "medium" | "hard" | null;
+          difficulty_source: "human_defined" | "imported" | "ai_inferred" | "manually_adjusted" | null;
+          origin: string | null;
         };
         Insert: {
           id?: string;
@@ -179,6 +182,9 @@ export type Database = {
           max_attempts?: number | null;
           hide_correct_answer_during_retry?: boolean | null;
           acceptance_criteria?: string | null;
+          difficulty?: "easy" | "medium" | "hard" | null;
+          difficulty_source?: "human_defined" | "imported" | "ai_inferred" | "manually_adjusted" | null;
+          origin?: string | null;
         };
         Update: {
           type?: "multiple_choice" | "true_false" | "fill_blank" | "open_short" | "numeric"
@@ -194,6 +200,51 @@ export type Database = {
           max_attempts?: number | null;
           hide_correct_answer_during_retry?: boolean | null;
           acceptance_criteria?: string | null;
+          difficulty?: "easy" | "medium" | "hard" | null;
+          difficulty_source?: "human_defined" | "imported" | "ai_inferred" | "manually_adjusted" | null;
+          origin?: string | null;
+        };
+      };
+      suggested_questions: {
+        Row: {
+          id: string;
+          pack_id: string;
+          topic_id: string;
+          type: string;
+          statement: string;
+          choices: Json | null;
+          correct_answer: string;
+          explanation: string;
+          difficulty: "easy" | "medium" | "hard" | null;
+          suggestion_reason: string | null;
+          status: "suggested" | "approved" | "rejected";
+          created_at: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          approved_as_exercise_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          pack_id: string;
+          topic_id: string;
+          type: string;
+          statement: string;
+          choices?: Json | null;
+          correct_answer: string;
+          explanation: string;
+          difficulty?: "easy" | "medium" | "hard" | null;
+          suggestion_reason?: string | null;
+          status?: "suggested" | "approved" | "rejected";
+          created_at?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          approved_as_exercise_id?: string | null;
+        };
+        Update: {
+          status?: "suggested" | "approved" | "rejected";
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          approved_as_exercise_id?: string | null;
         };
       };
       groups: {
@@ -385,3 +436,4 @@ export type GroupMemberRow = Tables["group_members"]["Row"];
 export type GroupAdminRow = Tables["group_admins"]["Row"];
 export type InvitationRow = Tables["invitations"]["Row"];
 export type GroupAssignmentRow = Tables["group_assignments"]["Row"];
+export type SuggestedQuestionRow = Tables["suggested_questions"]["Row"];

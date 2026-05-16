@@ -97,6 +97,10 @@ CREATE TABLE public.exercises (
 -- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS max_attempts INT;
 -- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS hide_correct_answer_during_retry BOOLEAN DEFAULT FALSE;
 -- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS acceptance_criteria TEXT;
+-- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS difficulty TEXT CHECK (difficulty IN ('easy','medium','hard'));
+-- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS difficulty_source TEXT DEFAULT 'ai_inferred';
+-- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS origin TEXT DEFAULT 'ai_reorganized';
+-- ALTER TABLE public.sections ADD COLUMN IF NOT EXISTS origin TEXT DEFAULT 'ai_reorganized';
 
 -- Progresso do aluno por tópico
 CREATE TABLE public.topic_progress (
@@ -315,3 +319,42 @@ CREATE INDEX ON public.tutor_messages (session_id, created_at);
 -- CREATE TABLE IF NOT EXISTS public.tutor_sessions (…);
 -- CREATE TABLE IF NOT EXISTS public.tutor_messages (…);
 -- CREATE TABLE IF NOT EXISTS public.tutor_safety_events (…);
+
+-- ── Fase 7 — Qualidade pedagógica e sugestões da IA ──────────────────────────
+
+-- Novas colunas em exercises
+-- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS difficulty TEXT CHECK (difficulty IN ('easy','medium','hard'));
+-- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS difficulty_source TEXT DEFAULT 'ai_inferred';
+-- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS origin TEXT DEFAULT 'ai_reorganized';
+
+-- Nova coluna em sections
+-- ALTER TABLE public.sections ADD COLUMN IF NOT EXISTS origin TEXT DEFAULT 'ai_reorganized';
+
+-- Questões sugeridas pela IA (aguardam aprovação humana)
+CREATE TABLE public.suggested_questions (
+  id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  pack_id                 UUID NOT NULL REFERENCES public.study_packs(id) ON DELETE CASCADE,
+  topic_id                UUID NOT NULL REFERENCES public.topics(id) ON DELETE CASCADE,
+  type                    TEXT NOT NULL,
+  statement               TEXT NOT NULL,
+  choices                 JSONB,
+  correct_answer          TEXT NOT NULL,
+  explanation             TEXT NOT NULL,
+  difficulty              TEXT CHECK (difficulty IN ('easy','medium','hard')),
+  suggestion_reason       TEXT,
+  status                  TEXT NOT NULL DEFAULT 'suggested'
+                          CHECK (status IN ('suggested','approved','rejected')),
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+  reviewed_at             TIMESTAMPTZ,
+  reviewed_by             UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  approved_as_exercise_id UUID REFERENCES public.exercises(id) ON DELETE SET NULL
+);
+
+ALTER TABLE public.suggested_questions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "suggested_questions: admin full"
+  ON public.suggested_questions FOR ALL
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+CREATE INDEX ON public.suggested_questions (pack_id, status);
+CREATE INDEX ON public.suggested_questions (topic_id);

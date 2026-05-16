@@ -191,9 +191,32 @@ export async function publishPackAction(
             correct_answer: e.correctAnswer,
             explanation: e.explanation,
             order: ei,
+            difficulty: e.difficulty ?? null,
+            difficulty_source: "ai_inferred",
+            origin: "ai_reorganized",
           })) as never
         );
       totalQuestions += t.exercises.length;
+    }
+
+    // Insert suggested questions (pending human review)
+    if (t.suggestedQuestions && t.suggestedQuestions.length > 0) {
+      await supabase
+        .from("suggested_questions")
+        .insert(
+          t.suggestedQuestions.map((sq) => ({
+            pack_id: packId,
+            topic_id: topicId,
+            type: sq.type,
+            statement: sq.statement,
+            choices: sq.choices ?? null,
+            correct_answer: sq.correctAnswer,
+            explanation: sq.explanation,
+            difficulty: sq.difficulty ?? null,
+            suggestion_reason: sq.suggestionReason ?? null,
+            status: "suggested",
+          })) as never
+        );
     }
   }
 
