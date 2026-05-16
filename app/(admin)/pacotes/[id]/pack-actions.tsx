@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Eye, Send, CheckCircle2, Archive } from "lucide-react";
+import { Eye, Send, CheckCircle2, Archive, Pencil } from "lucide-react";
 import { setPackStatusAction } from "./actions";
 import { archivePackAction } from "@/app/(admin)/pacotes/actions";
 import type { StudyPack } from "@/lib/mock-data";
@@ -34,6 +34,13 @@ export function PackActions({ pack }: PackActionsProps) {
 
   return (
     <div className="flex items-center gap-2 shrink-0">
+      <Link href={`/pacotes/${pack.id}/editar`}>
+        <Button variant="outline" size="sm" className="gap-2">
+          <Pencil className="h-4 w-4" />
+          Editar
+        </Button>
+      </Link>
+
       <Link href={`/estudar/${pack.id}`}>
         <Button variant="outline" size="sm" className="gap-2">
           <Eye className="h-4 w-4" />

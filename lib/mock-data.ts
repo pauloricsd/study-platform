@@ -38,6 +38,7 @@ export interface StudyPack {
   status: StudyPackStatus;
   topicsCount: number;
   questionsCount: number;
+  feedbackMode?: "immediate" | "adaptive";
   studentIds: string[];
   createdAt: string;
   updatedAt: string;

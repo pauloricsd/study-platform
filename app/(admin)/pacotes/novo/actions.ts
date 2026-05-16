@@ -27,6 +27,9 @@ export async function processPackAction(formData: FormData): Promise<
   const grade = formData.get("grade") as string;
   const examName = formData.get("examName") as string;
   const examDate = formData.get("examDate") as string;
+  const feedbackModeRaw = formData.get("feedbackMode") as string | null;
+  const feedbackMode: "immediate" | "adaptive" =
+    feedbackModeRaw === "adaptive" ? "adaptive" : "immediate";
 
   if (!title || !subject || !grade || !examName) {
     return { error: "Dados do pacote incompletos." };
@@ -47,6 +50,7 @@ export async function processPackAction(formData: FormData): Promise<
       exam_date: examDate || null,
       status: "draft",
       created_by: adminId,
+      feedback_mode: feedbackMode,
     } as never)
     .select("id")
     .single();

@@ -17,6 +17,7 @@ function mapPackRow(row: StudyPackRow): StudyPack {
     status: row.status,
     topicsCount: row.topics_count ?? 0,
     questionsCount: row.questions_count ?? 0,
+    feedbackMode: row.feedback_mode ?? "immediate",
     studentIds: [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,

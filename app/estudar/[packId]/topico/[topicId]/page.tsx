@@ -63,6 +63,7 @@ export default async function TopicStudyPage({ params }: Props) {
       topics={topics}
       exercises={exercises}
       packId={packId}
+      feedbackMode={pack.feedbackMode ?? "immediate"}
       onComplete={onComplete}
     />
   );

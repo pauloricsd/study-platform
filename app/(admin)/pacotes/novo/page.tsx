@@ -28,6 +28,8 @@ import {
   Check,
   AlertCircle,
   Download,
+  Zap,
+  Brain,
 } from "lucide-react";
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -86,6 +88,8 @@ export default function NovoPacotePage() {
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
 
+  const [feedbackMode, setFeedbackMode] = useState<"immediate" | "adaptive">("immediate");
+
   // Topic review state (index-based to work with dynamically generated topics)
   const [topicToggles, setTopicToggles] = useState<Record<number, boolean>>({});
   const [topicTitles, setTopicTitles] = useState<Record<number, string>>({});
@@ -123,6 +127,7 @@ export default function NovoPacotePage() {
     fd.append("grade", form.grade);
     fd.append("examName", form.examName);
     fd.append("examDate", form.examDate);
+    fd.append("feedbackMode", feedbackMode);
 
     const result = await processPackAction(fd);
 
@@ -272,6 +277,49 @@ export default function NovoPacotePage() {
                   value={form.examDate}
                   onChange={(e) => setForm({ ...form, examDate: e.target.value })}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Modo de feedback</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFeedbackMode("immediate")}
+                    className={cn(
+                      "rounded-xl border p-4 text-left transition-all",
+                      feedbackMode === "immediate"
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "border-border bg-white hover:border-primary/40 hover:bg-muted/30"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <Zap className="h-4 w-4 text-amber-500" />
+                      <span className="text-sm font-semibold">Imediato</span>
+                      <span className="ml-auto text-[10px] text-muted-foreground font-normal">padrão</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      O aluno vê o gabarito assim que responde.
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFeedbackMode("adaptive")}
+                    className={cn(
+                      "rounded-xl border p-4 text-left transition-all",
+                      feedbackMode === "adaptive"
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "border-border bg-white hover:border-primary/40 hover:bg-muted/30"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <Brain className="h-4 w-4 text-violet-500" />
+                      <span className="text-sm font-semibold">Adaptativo</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      O aluno precisa tentar de novo antes de ver a resposta.
+                    </p>
+                  </button>
+                </div>
               </div>
             </div>
             <div className="flex justify-end mt-4">

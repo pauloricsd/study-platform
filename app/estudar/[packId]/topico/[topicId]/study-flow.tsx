@@ -544,11 +544,13 @@ function ExerciseCard({
   exercise,
   number,
   total,
+  feedbackMode = "immediate",
   onResult,
 }: {
   exercise: Exercise;
   number: number;
   total: number;
+  feedbackMode?: "immediate" | "adaptive";
   onResult: (result: ExerciseResult) => void;
 }) {
   const [userAnswer, setUserAnswer] = useState("");
@@ -818,10 +820,12 @@ function ExerciseCard({
               <RotateCcw className="h-4 w-4" />
               Tentar novamente
             </Button>
-            <Button onClick={handleReveal} variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
-              <Eye className="h-4 w-4" />
-              Ver gabarito
-            </Button>
+            {(feedbackMode === "immediate" || attempt >= 2) && (
+              <Button onClick={handleReveal} variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
+                <Eye className="h-4 w-4" />
+                Ver gabarito
+              </Button>
+            )}
           </>
         )}
 
@@ -1047,6 +1051,7 @@ interface StudyFlowProps {
   topics: Topic[];
   exercises: Exercise[];
   packId: string;
+  feedbackMode?: "immediate" | "adaptive";
   onComplete?: (data: {
     score: number;
     correctAnswers: number;
@@ -1055,7 +1060,7 @@ interface StudyFlowProps {
   }) => Promise<void>;
 }
 
-export function StudyFlow({ topic, topics, exercises, packId, onComplete }: StudyFlowProps) {
+export function StudyFlow({ topic, topics, exercises, packId, feedbackMode = "immediate", onComplete }: StudyFlowProps) {
   const [phase, setPhase] = useState<Phase>("reading");
   const [currentExIdx, setCurrentExIdx] = useState(0);
   const [results, setResults] = useState<ExerciseResult[]>([]);
@@ -1196,6 +1201,7 @@ export function StudyFlow({ topic, topics, exercises, packId, onComplete }: Stud
               exercise={current}
               number={currentExIdx + 1}
               total={topicExercises.length}
+              feedbackMode={feedbackMode}
               onResult={handleExerciseResult}
             />
           </div>

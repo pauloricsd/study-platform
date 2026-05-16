@@ -51,6 +51,7 @@ export type Database = {
           status: "draft" | "in_review" | "published" | "archived";
           topics_count: number;
           questions_count: number;
+          feedback_mode: "immediate" | "adaptive";
           created_at: string;
           updated_at: string;
         };
@@ -65,6 +66,7 @@ export type Database = {
           status?: "draft" | "in_review" | "published" | "archived";
           topics_count?: number;
           questions_count?: number;
+          feedback_mode?: "immediate" | "adaptive";
           created_at?: string;
           updated_at?: string;
         };
@@ -77,6 +79,7 @@ export type Database = {
           status?: "draft" | "in_review" | "published" | "archived";
           topics_count?: number;
           questions_count?: number;
+          feedback_mode?: "immediate" | "adaptive";
           updated_at?: string;
         };
       };
