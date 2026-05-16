@@ -157,6 +157,9 @@ export type Database = {
           order: number;
           passage: string | null;
           left_items: Json | null;
+          max_attempts: number | null;
+          hide_correct_answer_during_retry: boolean | null;
+          acceptance_criteria: string | null;
         };
         Insert: {
           id?: string;
@@ -171,6 +174,9 @@ export type Database = {
           order?: number;
           passage?: string | null;
           left_items?: Json | null;
+          max_attempts?: number | null;
+          hide_correct_answer_during_retry?: boolean | null;
+          acceptance_criteria?: string | null;
         };
         Update: {
           type?: "multiple_choice" | "true_false" | "fill_blank" | "open_short" | "numeric"
@@ -183,6 +189,9 @@ export type Database = {
           order?: number;
           passage?: string | null;
           left_items?: Json | null;
+          max_attempts?: number | null;
+          hide_correct_answer_during_retry?: boolean | null;
+          acceptance_criteria?: string | null;
         };
       };
       groups: {

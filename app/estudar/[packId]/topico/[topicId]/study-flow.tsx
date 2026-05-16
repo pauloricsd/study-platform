@@ -179,6 +179,8 @@ const feedbackConfig: Record<
     title: "Gabarito revelado.",
     message: "Veja a resposta correta e a explicação abaixo.",
   },
+  // runtime-only: used when maxAttempts is exhausted (mapped to "revealed" state)
+
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -580,6 +582,21 @@ function ExerciseCard({
     return userAnswer;
   }
 
+  const maxAttempts = exercise.maxAttempts ?? null;
+  const hideGabarito = exercise.hideCorrectAnswerDuringRetry ?? false;
+
+  // Force reveal when attempts exhausted
+  function applyResult(result: AnswerState) {
+    const isWrong = result === "incorrect" || result === "partial" || result === "too_short";
+    if (isWrong && maxAttempts !== null && attempt >= maxAttempts) {
+      setAnswerState("revealed");
+      setShowExplanation(true);
+    } else {
+      setAnswerState(result);
+      if (result === "correct") setShowExplanation(true);
+    }
+  }
+
   function handleSubmit() {
     const effective = getEffectiveAnswer();
     if (!effective && exercise.type !== "multiple_choice" && exercise.type !== "true_false") return;
@@ -592,17 +609,16 @@ function ExerciseCard({
           userAnswer: effective,
           exerciseType: exercise.type,
           passage: exercise.passage ?? undefined,
+          acceptanceCriteria: exercise.acceptanceCriteria ?? undefined,
         });
         setAiFeedback(feedback);
-        setAnswerState(verdict);
-        if (verdict === "correct") setShowExplanation(true);
+        applyResult(verdict);
       });
       return;
     }
 
     const result = evaluateAnswer(exercise, effective, attempt);
-    setAnswerState(result);
-    if (result === "correct") setShowExplanation(true);
+    applyResult(result);
   }
 
   function handleRetry() {
@@ -814,20 +830,33 @@ function ExerciseCard({
         )}
 
         {(answerState === "incorrect" || answerState === "partial" || answerState === "too_short") &&
-          exercise.type !== "open_long" && exercise.type !== "text_production" && (
-          <>
-            <Button onClick={handleRetry} variant="outline" className="gap-2">
-              <RotateCcw className="h-4 w-4" />
-              Tentar novamente
-            </Button>
-            {(feedbackMode === "immediate" || attempt >= 2) && (
-              <Button onClick={handleReveal} variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
-                <Eye className="h-4 w-4" />
-                Ver gabarito
-              </Button>
-            )}
-          </>
-        )}
+          exercise.type !== "open_long" && exercise.type !== "text_production" && (() => {
+            const attemptsLeft = maxAttempts !== null ? maxAttempts - attempt : null;
+            const canRetry = maxAttempts === null || attempt < maxAttempts;
+            const canRevealBtn = !hideGabarito && (feedbackMode === "immediate" || attempt >= 2);
+            return (
+              <>
+                {canRetry && (
+                  <Button onClick={handleRetry} variant="outline" className="gap-2">
+                    <RotateCcw className="h-4 w-4" />
+                    Tentar novamente
+                    {attemptsLeft !== null && attemptsLeft > 0 && (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        ({attemptsLeft} restante{attemptsLeft !== 1 ? "s" : ""})
+                      </span>
+                    )}
+                  </Button>
+                )}
+                {canRevealBtn && (
+                  <Button onClick={handleReveal} variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
+                    <Eye className="h-4 w-4" />
+                    Ver gabarito
+                  </Button>
+                )}
+              </>
+            );
+          })()
+        }
 
         {isDone && (
           <Button onClick={handleNext} className="gap-2">

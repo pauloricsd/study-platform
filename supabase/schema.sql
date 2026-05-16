@@ -86,8 +86,15 @@ CREATE TABLE public.exercises (
   choices        JSONB,   -- [{id, label, text}] para múltipla escolha
   correct_answer TEXT NOT NULL,
   explanation    TEXT NOT NULL,
-  "order"        INT NOT NULL DEFAULT 0
+  "order"        INT NOT NULL DEFAULT 0,
+  max_attempts   INT,                        -- null = unlimited retries
+  hide_correct_answer_during_retry BOOLEAN DEFAULT FALSE,
+  acceptance_criteria TEXT                  -- criteria for AI grading of open questions
 );
+-- Migration for existing databases:
+-- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS max_attempts INT;
+-- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS hide_correct_answer_during_retry BOOLEAN DEFAULT FALSE;
+-- ALTER TABLE public.exercises ADD COLUMN IF NOT EXISTS acceptance_criteria TEXT;
 
 -- Progresso do aluno por tópico
 CREATE TABLE public.topic_progress (

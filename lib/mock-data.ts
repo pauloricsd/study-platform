@@ -17,6 +17,8 @@ export interface Student {
   grade: string;
   avatarInitials: string;
   color: string;
+  /** Internal login e-mail — only set for accounts created via the no-email flow (@sia.local) */
+  loginEmail?: string;
 }
 
 export interface StudyPackProgress {

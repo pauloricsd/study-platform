@@ -55,13 +55,13 @@ export function PackDetailClient({ pack, topics, exercises, report }: PackDetail
     <div className="flex flex-col">
       {/* Tabs bar */}
       <div className="border-b bg-white px-6">
-        <div className="flex gap-0">
+        <div className="flex gap-0 overflow-x-auto">
           {tabs.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-3.5 text-sm font-medium border-b-2 -mb-px transition-colors",
+                "flex items-center gap-2 px-4 py-3.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
                 activeTab === id
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"

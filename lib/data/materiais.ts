@@ -9,7 +9,7 @@ export interface SourceFileWithPack {
   processingStatus: "pending" | "processing" | "done" | "error";
   uploadedAt: string;
   signedUrl: string | null;
-  pack: { id: string; title: string; subject: string };
+  pack: { id: string; title: string; subject: string; status: string; topicsCount: number };
 }
 
 export interface ExerciseWithContext {
@@ -31,7 +31,7 @@ export async function getSourceFiles(): Promise<SourceFileWithPack[]> {
   const supabase = await db();
   const result = await supabase
     .from("source_files")
-    .select("*, study_packs(id, title, subject)")
+    .select("*, study_packs(id, title, subject, status, topics(count))")
     .order("uploaded_at", { ascending: false });
 
   const data = result.data as
@@ -47,7 +47,13 @@ export async function getSourceFiles(): Promise<SourceFileWithPack[]> {
         },
         never
       > & {
-        study_packs: { id: string; title: string; subject: string } | null;
+        study_packs: {
+          id: string;
+          title: string;
+          subject: string;
+          status: string;
+          topics: { count: number }[];
+        } | null;
       })[]
     | null;
 
@@ -61,22 +67,31 @@ export async function getSourceFiles(): Promise<SourceFileWithPack[]> {
     .from("source-files")
     .createSignedUrls(paths, 3600);
 
-  const signedUrlMap = new Map<string, string>(
-    (signedUrlsData ?? [])
-      .filter((u) => u.signedUrl)
-      .map((u) => [u.path, u.signedUrl])
-  );
+  const signedUrlMap = new Map<string, string>();
+  for (const u of signedUrlsData ?? []) {
+    if (u.path && u.signedUrl) signedUrlMap.set(u.path, u.signedUrl);
+  }
 
-  return filtered.map((row) => ({
-    id: row.id,
-    fileName: row.file_name,
-    fileSize: row.file_size,
-    storagePath: row.storage_path,
-    processingStatus: row.processing_status,
-    uploadedAt: row.uploaded_at,
-    signedUrl: signedUrlMap.get(row.storage_path) ?? null,
-    pack: row.study_packs!,
-  }));
+  return filtered.map((row) => {
+    const pack = row.study_packs!;
+    const topicsCount = (pack.topics as unknown as { count: number }[] | null)?.[0]?.count ?? 0;
+    return {
+      id: row.id,
+      fileName: row.file_name,
+      fileSize: row.file_size,
+      storagePath: row.storage_path,
+      processingStatus: row.processing_status,
+      uploadedAt: row.uploaded_at,
+      signedUrl: signedUrlMap.get(row.storage_path) ?? null,
+      pack: {
+        id: pack.id,
+        title: pack.title,
+        subject: pack.subject,
+        status: pack.status,
+        topicsCount,
+      },
+    };
+  });
 }
 
 export async function getAllExercises(): Promise<ExerciseWithContext[]> {

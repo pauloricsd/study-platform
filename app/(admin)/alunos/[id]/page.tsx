@@ -4,8 +4,9 @@ import { Topbar } from "@/components/layout/topbar";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { getStudentById } from "@/lib/data/students";
-import { getPacksForStudent } from "@/lib/data/packs";
+import { getPacksForStudent, getPacks } from "@/lib/data/packs";
 import { subjectColors, getCompletionRate, getAccuracyRate, getDaysUntilExam } from "@/lib/mock-data";
+import { AssignPackDialog } from "./assign-pack-dialog";
 import {
   ArrowLeft,
   BookOpen,
@@ -15,6 +16,7 @@ import {
   TrendingUp,
   CalendarDays,
   Layers,
+  KeyRound,
 } from "lucide-react";
 
 const TODAY = new Date();
@@ -40,10 +42,23 @@ export default async function StudentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [student, packs] = await Promise.all([
+  const [student, packs, allPacks] = await Promise.all([
     getStudentById(id),
     getPacksForStudent(id),
+    getPacks(),
   ]);
+
+  // Published packs not yet assigned to this student
+  const assignedIds = new Set(packs.map((p) => p.id));
+  const availablePacks = allPacks
+    .filter((p) => p.status === "published" && !assignedIds.has(p.id))
+    .map((p) => ({
+      id: p.id,
+      title: p.title,
+      subject: p.subject,
+      grade: p.grade,
+      examName: p.examName,
+    }));
 
   if (!student) notFound();
 
@@ -141,11 +156,38 @@ export default async function StudentDetailPage({
           </div>
         </div>
 
+        {/* Login credentials — only for @sia.local accounts */}
+        {student.loginEmail && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-start gap-3">
+            <KeyRound className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-amber-900">Credenciais de acesso</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Esta conta foi criada pelo administrador. Compartilhe o login e a senha com o aluno.
+              </p>
+              <div className="mt-2 rounded-lg border border-amber-200 bg-white px-3 py-2">
+                <p className="text-xs text-muted-foreground">Login (e-mail interno)</p>
+                <p className="text-sm font-mono font-medium text-foreground mt-0.5 break-all">{student.loginEmail}</p>
+              </div>
+              <p className="text-xs text-amber-700 mt-1.5">
+                A senha foi definida no momento da criação. Peça ao aluno para alterá-la em Configurações após o primeiro acesso.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Pack list */}
         <div>
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Pacotes de estudo
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              Pacotes de estudo
+            </h3>
+            <AssignPackDialog
+              studentId={id}
+              studentName={student.name}
+              availablePacks={availablePacks}
+            />
+          </div>
 
           {packs.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-white py-12 text-center">

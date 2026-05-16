@@ -93,6 +93,9 @@ export async function getExercisesForTopics(topicIds: string[]): Promise<Exercis
     correctAnswer: row.correct_answer,
     explanation: row.explanation,
     order: row.order ?? 0,
+    maxAttempts: row.max_attempts ?? undefined,
+    hideCorrectAnswerDuringRetry: row.hide_correct_answer_during_retry ?? undefined,
+    acceptanceCriteria: row.acceptance_criteria ?? undefined,
   }));
 }
 
@@ -120,5 +123,8 @@ export async function getExercisesByTopic(topicId: string): Promise<Exercise[]> 
     correctAnswer: row.correct_answer,
     explanation: row.explanation,
     order: row.order ?? 0,
+    maxAttempts: row.max_attempts ?? undefined,
+    hideCorrectAnswerDuringRetry: row.hide_correct_answer_during_retry ?? undefined,
+    acceptanceCriteria: row.acceptance_criteria ?? undefined,
   }));
 }

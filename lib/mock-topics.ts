@@ -46,6 +46,12 @@ export interface Exercise {
   // match_columns: left-side items to pair with choices (right side)
   // correctAnswer is JSON: {"0":"b","1":"a",...} — leftItems index → choice id
   leftItems?: string[];
+  // retry flow: null/undefined = unlimited attempts
+  maxAttempts?: number | null;
+  // retry flow: hide "Ver gabarito" while attempts remain
+  hideCorrectAnswerDuringRetry?: boolean;
+  // AI grading: specific criteria for open-ended questions
+  acceptanceCriteria?: string | null;
 }
 
 export interface Topic {

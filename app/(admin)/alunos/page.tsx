@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { getStudents } from "@/lib/data/students";
 import { getPacks } from "@/lib/data/packs";
 import { getCompletionRate, getAccuracyRate } from "@/lib/mock-data";
+import { NovoAlunoDialog } from "./novo-aluno-dialog";
 import {
   Users,
   BookOpen,
@@ -85,7 +86,7 @@ export default async function StudentsPage() {
 
   return (
     <>
-      <Topbar title="Alunos" />
+      <Topbar title="Alunos" action={<NovoAlunoDialog />} />
 
       <main className="p-6 space-y-6">
         {/* Stats */}

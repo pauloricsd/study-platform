@@ -81,7 +81,16 @@ Objetivo: validar fluxos, componentes e experiência sem backend real.
 - [x] **Layout mobile responsivo** — tópicos e filtros de exercício colapsáveis no mobile; sidebar colapsável no detalhe do pacote
 - [x] **Histórico de revisão** (`/estudar/historico`) — tópicos agrupados por prioridade (revisar → concluído → não iniciado); progresso, acerto e data por tópico; botões de estudar/revisar/refazer
 - [x] **Context de perfil** — `UserProfileContext` + `UserProfileProvider`; profile fetched em layouts server components, consumido por `UserMenu` sem quebrar boundary client/server
-- [ ] **Deploy** — Vercel + Supabase produção
+- [x] **Página Materiais** (`/materiais`) — duas abas: Arquivos (PDFs com signed URL, status de processamento) e Questões (banco completo com filtro por tipo); ambos clicáveis
+- [x] **Edição de pacotes** (`/pacotes/[id]/editar`) — editor completo: metadados, tópicos (título + resumo), exercícios (tipo, enunciado, gabarito, explicação); add/delete exercícios com feedback visual
+- [x] **Modo de feedback adaptativo** — coluna `feedback_mode` em `study_packs`; opção no wizard de criação (Imediato vs Adaptativo); fluxo adaptativo oculta gabarito até 2ª tentativa
+- [x] **Relatório de pacote** — aba "Relatório" no detalhe do pacote: performance por tópico, top-5 exercícios com mais erros, progresso por aluno
+- [x] **Conta de aluno sem e-mail** — admin cria conta de aluno diretamente (nome + série + senha); e-mail interno gerado automaticamente (`@sia.local`); `createUser` com `email_confirm: true`; dialog com tela de sucesso mostrando login gerado
+- [x] **Publicação de pacotes** — dialog de confirmação com checklist pré-publicação (tópicos + questões); opção "Despublicar" via dropdown para pacotes publicados; `DropdownMenu` component adicionado
+- [x] **Edição de alternativas** — editor de choices inline para `multiple_choice`, `true_false` e `multiple_select`; círculos clicáveis para marcar resposta correta; choices salvas em `exercises.choices` (JSONB)
+- [x] **Credenciais de aluno visíveis** — `getStudentById` busca email via `auth.admin.getUserById`; exibe card de credenciais em `/alunos/[id]` somente para contas `@sia.local`; fecha o loop do fluxo de criação sem e-mail
+- [x] **Atribuição direta de pacote a aluno** — botão "Atribuir pacote" em `/alunos/[id]`; dialog de seleção com busca; `assignPackToStudentAction` insere em `student_packs`; útil para alunos criados sem grupo
+- [ ] **Deploy** — Vercel + Supabase produção *(requer credenciais — fazer por último)*
 
 ---
 
@@ -89,11 +98,14 @@ Objetivo: validar fluxos, componentes e experiência sem backend real.
 
 _Planejada. Ver [PRD seção 14](./01-prd-principal.md#14-roadmap)._
 
-- [ ] StudyPack Format (padrão de arquivo de questões)
-- [ ] Mais tipos de questões (numérica, associação, ordenação)
-- [ ] Critérios de aceite configuráveis por questão
-- [ ] Feedback adaptativo
-- [ ] Retry flow avançado
+- [x] **StudyPack Format — Importação JSON** — validador completo (`lib/ai/import-studypack.ts`): erros bloqueantes + avisos; página `/pacotes/importar` com drop zone + paste, prévia de tópicos e questões antes de confirmar; server action cria pack como rascunho + tópicos + exercícios; botão "Importar JSON" na listagem de pacotes
+- [x] **Edição de seções de conteúdo** — add/edit/delete de seções (explicação, exemplo, resumo, atenção, erro comum) dentro dos tópicos no editor de pacotes; `SectionRow` com tipo, título opcional e conteúdo; fecha o loop de edição de conteúdo gerado pela IA
+- [x] **Export StudyPack** — botão "Exportar JSON" no detalhe do pacote; `exportStudyPackAction` mapeia pack + tópicos + seções + exercícios para o formato StudyPack v1.0; download via `Blob` + `createObjectURL`
+- [x] **Retry flow avançado** — `maxAttempts` e `hideCorrectAnswerDuringRetry` por questão; colunas no schema + database.types; editor com campo numérico e checkbox; study-flow força reveal ao esgotar tentativas, exibe contador de tentativas restantes
+- [x] **Critérios de aceite configuráveis por questão** — campo `acceptanceCriteria` no editor para tipos avaliados pela IA (`open_short`, `text_interpretation`, `explain_required`, `open_long`, `text_production`); passado para `gradeOpenAnswer` como contexto adicional ao prompt
+- [x] **Melhorar página de Materiais** — refatorada em Server + Client; filtros de status e matéria (arquivos) + tipo/matéria/busca (questões); status do pack + contagem de tópicos gerados por arquivo; botão "Baixar" com `download`; botão excluir com server action; contagem de resultados filtrados
+- [x] **IA assistente de edição** — painel colapsável no editor de pacotes; instrução em linguagem natural; `generateAiEditProposal` envia contexto do pack (tópicos, seções, questões) para `gpt-4o`; proposta retorna como lista de alterações revisáveis (checkbox por item); `applyAiChanges` aplica apenas as selecionadas; chips de sugestão para inspirar o professor
+- [ ] **Tabbar de pacotes — correção de texto** — itens da tab bar quebrando em telas menores; ajustar para scroll horizontal ou chips menores
 
 ---
 
@@ -101,7 +113,7 @@ _Planejada. Ver [PRD seção 14](./01-prd-principal.md#14-roadmap)._
 
 - [ ] Relatórios para pais/professores
 - [ ] Recomendações automáticas de revisão
-- [ ] Histórico de tentativas
+- [ ] Histórico de tentativas por exercício
 - [ ] Mapa de dificuldades por tópico
 
 ---
@@ -115,4 +127,4 @@ _Planejada. Ver [PRD seção 14](./01-prd-principal.md#14-roadmap)._
 
 ---
 
-_Última atualização: 2026-05-15 — Fase 1 completa: auth, grupos, IA, histórico, perfil duplo, mobile. Falta apenas deploy em produção._
+_Última atualização: 2026-05-16 — Fase 2 quase concluída. Pendente apenas: deploy em produção (Vercel + Supabase)._

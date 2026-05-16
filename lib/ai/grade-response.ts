@@ -15,12 +15,14 @@ export async function gradeOpenAnswer({
   userAnswer,
   exerciseType,
   passage,
+  acceptanceCriteria,
 }: {
   question: string;
   correctAnswer: string;
   userAnswer: string;
   exerciseType: string;
   passage?: string;
+  acceptanceCriteria?: string | null;
 }): Promise<GradeResult> {
   if (!process.env.OPENAI_API_KEY) {
     return { verdict: userAnswer.trim().length > 30 ? "partial" : "incorrect", feedback: "" };
@@ -38,6 +40,7 @@ Responda SOMENTE com JSON válido: {"verdict":"correct"|"partial"|"incorrect","f
     passage ? `Texto de referência: "${passage}"` : null,
     `Enunciado: ${question}`,
     `Gabarito esperado: ${correctAnswer}`,
+    acceptanceCriteria ? `Critérios de aceite: ${acceptanceCriteria}` : null,
     `Resposta do aluno: ${userAnswer}`,
   ].filter(Boolean).join("\n");
 
