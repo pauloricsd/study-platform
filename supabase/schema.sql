@@ -247,3 +247,69 @@ CREATE INDEX ON public.topic_progress (topic_id);
 CREATE INDEX ON public.exercise_responses (student_id, exercise_id);
 CREATE INDEX ON public.study_packs (status);
 CREATE INDEX ON public.study_packs (created_by);
+
+-- ── Tutor IA ──────────────────────────────────────────────────────────────────
+-- Sessões de conversa (uma por aluno × tópico × questão)
+CREATE TABLE public.tutor_sessions (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id  UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  pack_id     UUID NOT NULL REFERENCES public.study_packs(id) ON DELETE CASCADE,
+  topic_id    UUID NOT NULL REFERENCES public.topics(id) ON DELETE CASCADE,
+  exercise_id UUID REFERENCES public.exercises(id) ON DELETE SET NULL,
+  mode        TEXT NOT NULL DEFAULT 'study' CHECK (mode IN ('study', 'exercise')),
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Mensagens da conversa
+CREATE TABLE public.tutor_messages (
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id            UUID NOT NULL REFERENCES public.tutor_sessions(id) ON DELETE CASCADE,
+  role                  TEXT NOT NULL CHECK (role IN ('student', 'assistant')),
+  content               TEXT NOT NULL,
+  confidence            TEXT,
+  direct_answer_blocked BOOLEAN DEFAULT FALSE,
+  used_studypack_context BOOLEAN DEFAULT TRUE,
+  created_at            TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Eventos de segurança (pedido de resposta bloqueado, conteúdo inadequado, etc.)
+CREATE TABLE public.tutor_safety_events (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id      UUID NOT NULL REFERENCES public.tutor_sessions(id) ON DELETE CASCADE,
+  type            TEXT NOT NULL,
+  action          TEXT NOT NULL,
+  student_message TEXT,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS: aluno só vê as próprias sessões; admin vê todas
+ALTER TABLE public.tutor_sessions      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tutor_messages      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tutor_safety_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "tutor_sessions_student"  ON public.tutor_sessions
+  FOR ALL USING (student_id = auth.uid() OR
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+CREATE POLICY "tutor_messages_student"  ON public.tutor_messages
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.tutor_sessions s WHERE s.id = session_id AND
+      (s.student_id = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')))
+  );
+
+CREATE POLICY "tutor_safety_events_admin" ON public.tutor_safety_events
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+CREATE INDEX ON public.tutor_sessions (student_id, topic_id);
+CREATE INDEX ON public.tutor_messages (session_id, created_at);
+
+-- Migration SQL (for existing databases):
+-- ALTER TABLE … is only needed if you're adding to an existing Supabase project.
+-- Run each statement in Supabase SQL Editor > New query:
+--
+-- CREATE TABLE IF NOT EXISTS public.tutor_sessions (…);
+-- CREATE TABLE IF NOT EXISTS public.tutor_messages (…);
+-- CREATE TABLE IF NOT EXISTS public.tutor_safety_events (…);

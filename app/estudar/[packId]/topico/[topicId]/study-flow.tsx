@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { type Topic, type Exercise, questionTypeConfig } from "@/lib/mock-topics";
 import { gradeOpenAnswer } from "@/lib/ai/grade-response";
+import { TutorChat, type TutorChatProps } from "@/components/tutor/tutor-chat";
+import { sendTutorMessage } from "./tutor-actions";
 import {
   CheckCircle2,
   XCircle,
@@ -547,13 +549,19 @@ function ExerciseCard({
   number,
   total,
   feedbackMode = "immediate",
+  packId,
+  topicId,
   onResult,
+  onSendMessage,
 }: {
   exercise: Exercise;
   number: number;
   total: number;
   feedbackMode?: "immediate" | "adaptive";
+  packId: string;
+  topicId: string;
   onResult: (result: ExerciseResult) => void;
+  onSendMessage: TutorChatProps["onSendMessage"];
 }) {
   const [userAnswer, setUserAnswer] = useState("");
   const [multiSelectIds, setMultiSelectIds] = useState<string[]>([]);
@@ -874,6 +882,21 @@ function ExerciseCard({
           </Button>
         )}
       </div>
+
+      {/* Tutor IA — modo exercício */}
+      <TutorChat
+        packId={packId}
+        topicId={topicId}
+        mode="exercise"
+        exerciseId={exercise.id}
+        exerciseStatement={exercise.statement}
+        exerciseType={exercise.type}
+        studentAnswer={getEffectiveAnswer()}
+        answerState={answerState}
+        attemptNumber={attempt}
+        previousFeedback={aiFeedback || undefined}
+        onSendMessage={onSendMessage}
+      />
     </div>
   );
 }
@@ -1212,6 +1235,14 @@ export function StudyFlow({ topic, topics, exercises, packId, feedbackMode = "im
             )}
           </div>
         </main>
+
+        {/* Tutor IA — modo estudo */}
+        <TutorChat
+          packId={packId}
+          topicId={topic.id}
+          mode="study"
+          onSendMessage={sendTutorMessage}
+        />
       </div>
     );
   }
@@ -1231,7 +1262,10 @@ export function StudyFlow({ topic, topics, exercises, packId, feedbackMode = "im
               number={currentExIdx + 1}
               total={topicExercises.length}
               feedbackMode={feedbackMode}
+              packId={packId}
+              topicId={topic.id}
               onResult={handleExerciseResult}
+              onSendMessage={sendTutorMessage}
             />
           </div>
         </main>

@@ -133,13 +133,13 @@ _Especificação completa em [docs/08-tutor-ia-aluno.md](./08-tutor-ia-aluno.md)
 
 ### MVP
 
-- [ ] **Chat contextual durante estudo** — drawer/painel acessível nas telas de leitura de tópico; modo `study`; responde com base no conteúdo do StudyPack; dicas, exemplos, analogias, simplificação de linguagem
-- [ ] **Chat contextual durante exercícios** — modo `exercise`; aviso "Posso te ajudar a pensar, mas não vou te dar a resposta direta"; bloqueio de entrega de resposta direta
-- [ ] **Bloqueio de resposta direta** — detecta pedidos de gabarito/alternativa e redireciona para orientação pedagógica; registra `TutorSafetyEvent`
-- [ ] **Feedback baseado em erro** — analisa tentativa errada do aluno e orienta sem revelar gabarito; dica gradual; pergunta orientadora
-- [ ] **Estado de baixa confiança** — IA sinaliza quando não tem informação suficiente no material e orienta confirmar com professor/responsável
-- [ ] **Persistência de sessão e mensagens** — tabelas `tutor_sessions`, `tutor_messages`, `tutor_safety_events` no banco; histórico da conversa por tópico/questão
-- [ ] **Sugestões de entrada** — chips de prompt sugerido (ex: "Me dê uma dica", "Explique o enunciado") para facilitar a interação
+- [x] **Chat contextual durante estudo** — painel flutuante acessível na tela de leitura de tópico; modo `study`; responde com base no conteúdo do StudyPack; dicas, exemplos, analogias, simplificação de linguagem
+- [x] **Chat contextual durante exercícios** — modo `exercise`; aviso "Posso te ajudar a pensar, mas não vou te dar a resposta direta"; bloqueio de entrega de resposta direta
+- [x] **Bloqueio de resposta direta** — detecta pedidos de gabarito/alternativa e redireciona para orientação pedagógica; registra `TutorSafetyEvent`
+- [x] **Feedback baseado em erro** — analisa tentativa errada do aluno e orienta sem revelar gabarito; dica gradual; pergunta orientadora
+- [x] **Estado de baixa confiança** — IA sinaliza quando não tem informação suficiente no material e orienta confirmar com professor/responsável
+- [x] **Persistência de sessão e mensagens** — tabelas `tutor_sessions`, `tutor_messages`, `tutor_safety_events` no banco; histórico da conversa por tópico/questão
+- [x] **Sugestões de entrada** — chips de prompt sugerido (ex: "Me dê uma dica", "Explique o enunciado") para facilitar a interação
 
 ### Fora do MVP
 
@@ -150,4 +150,4 @@ _Especificação completa em [docs/08-tutor-ia-aluno.md](./08-tutor-ia-aluno.md)
 
 ---
 
-_Última atualização: 2026-05-16 — Fases 2 e 3 completas. Fase 5 (Tutor IA) especificada, aguardando implementação._
+_Última atualização: 2026-05-16 — Fases 2, 3 e 5 (MVP) completas. Tutor IA integrado em modo estudo e modo exercício._
