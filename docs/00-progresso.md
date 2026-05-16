@@ -150,4 +150,38 @@ _Especificação completa em [docs/08-tutor-ia-aluno.md](./08-tutor-ia-aluno.md)
 
 ---
 
-_Última atualização: 2026-05-16 — Fases 2, 3 e 5 (MVP) completas. Tutor IA integrado em modo estudo e modo exercício._
+---
+
+## Fase 6 — Painel Operacional
+
+_Especificação completa em [docs/09-painel-operacional.md](./09-painel-operacional.md)._
+
+### Item A — Widget flutuante + permissão `is_operational`
+
+- [x] **Permissão `is_operational`** — coluna `BOOLEAN DEFAULT FALSE` na tabela `profiles`; lida em `getCurrentProfile()` via `lib/data/auth.ts`; exposta como `isOperational` no tipo `Profile`
+- [x] **Widget flutuante** — `components/operational/operational-widget.tsx` (`"use client"`); pill "⚙ Ops" fixado em `bottom-4 left-4`; dropdown com badge de ambiente, "Abrir painel operacional" (nova aba) e "Copiar user ID" (clipboard com check animado)
+- [x] **Widget inserido nos layouts** — renderizado condicionalmente em: layout admin `(admin)`, layout de browsing do aluno `estudar/(browsing)` e página de estudo `estudar/[packId]/topico/[topicId]`
+
+### Item B — Painel Operacional — Overview com métricas reais
+
+- [x] **Rota `/operacional`** — layout escuro dedicado (`app/operacional/layout.tsx`) com sidebar de 10 itens; itens "em breve" usam `<span>` (não `<Link>` com onClick em Server Component)
+- [x] **Proteção de rota** — `redirect("/")` em `layout.tsx` se `!profile?.isOperational`
+- [x] **Badge de ambiente** — indicador visual "production" (verde) ou "development" (âmbar) no cabeçalho da sidebar
+- [x] **Métricas em tempo real** — `lib/data/operational.ts`; `getOverviewMetrics()` com 12 queries paralelas via `Promise.all`
+- [x] **Overview page** — 4 seções de métricas: Usuários, Conteúdo, Atividade dos alunos, Tutor IA; 1 seção de placeholders (Sistema & Infraestrutura — dados externos para fase futura)
+
+### Próximas seções do painel (em breve)
+
+- [ ] Usuários — listagem e detalhes de perfis
+- [ ] Alunos — visão agregada de atividade
+- [ ] Estudos — conteúdo e pacotes
+- [ ] Tutor IA — logs de sessões e segurança
+- [ ] Uploads — gerenciamento de arquivos
+- [ ] Sistema — infraestrutura e saúde
+- [ ] Design System — tokens e componentes
+- [ ] Logs — eventos do sistema
+- [ ] Configurações — ajustes operacionais
+
+---
+
+_Última atualização: 2026-05-16 — Fase 6 iniciada: widget operacional e overview com métricas reais concluídos._
