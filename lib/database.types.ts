@@ -18,6 +18,7 @@ export type Database = {
           avatar_initials: string | null;
           avatar_color: string | null;
           can_switch_role: boolean;
+          is_operational: boolean;
           created_at: string;
         };
         Insert: {
@@ -28,6 +29,7 @@ export type Database = {
           avatar_initials?: string | null;
           avatar_color?: string | null;
           can_switch_role?: boolean;
+          is_operational?: boolean;
           created_at?: string;
         };
         Update: {

@@ -5,13 +5,15 @@
 
 -- Perfis de usuário (admin ou aluno)
 CREATE TABLE public.profiles (
-  id          UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  role        TEXT NOT NULL CHECK (role IN ('admin', 'student')),
-  name        TEXT NOT NULL,
-  grade       TEXT,
-  avatar_initials TEXT,
-  avatar_color    TEXT,
-  created_at  TIMESTAMPTZ DEFAULT NOW()
+  id               UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  role             TEXT NOT NULL CHECK (role IN ('admin', 'student')),
+  name             TEXT NOT NULL,
+  grade            TEXT,
+  avatar_initials  TEXT,
+  avatar_color     TEXT,
+  can_switch_role  BOOLEAN DEFAULT FALSE,
+  is_operational   BOOLEAN DEFAULT FALSE,  -- acesso ao Painel Operacional
+  created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Trigger para criar perfil automaticamente ao registrar usuário

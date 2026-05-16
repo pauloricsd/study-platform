@@ -4,6 +4,7 @@ import { getPackById } from "@/lib/data/packs";
 import { getTopicsByPack, getExercisesForTopics } from "@/lib/data/topics";
 import { saveTopicProgress, saveExerciseResponses } from "@/lib/data/progress";
 import { StudyFlow } from "./study-flow";
+import { OperationalWidget } from "@/components/operational/operational-widget";
 
 interface Props {
   params: Promise<{ packId: string; topicId: string }>;
@@ -58,13 +59,21 @@ export default async function TopicStudyPage({ params }: Props) {
   }
 
   return (
-    <StudyFlow
-      topic={topic}
-      topics={topics}
-      exercises={exercises}
-      packId={packId}
-      feedbackMode={pack.feedbackMode ?? "immediate"}
-      onComplete={onComplete}
-    />
+    <>
+      <StudyFlow
+        topic={topic}
+        topics={topics}
+        exercises={exercises}
+        packId={packId}
+        feedbackMode={pack.feedbackMode ?? "immediate"}
+        onComplete={onComplete}
+      />
+      {profile?.isOperational && (
+        <OperationalWidget
+          userId={profile.id}
+          environment={process.env.NODE_ENV ?? "development"}
+        />
+      )}
+    </>
   );
 }

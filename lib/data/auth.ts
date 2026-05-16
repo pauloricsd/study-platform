@@ -10,6 +10,7 @@ export interface Profile {
   avatarInitials?: string | null;
   avatarColor?: string | null;
   canSwitchRole?: boolean;
+  isOperational?: boolean;
 }
 
 async function db() {
@@ -50,5 +51,6 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     avatarInitials: data.avatar_initials,
     avatarColor: data.avatar_color,
     canSwitchRole: data.can_switch_role ?? false,
+    isOperational: data.is_operational ?? false,
   };
 }
