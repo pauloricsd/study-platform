@@ -170,7 +170,12 @@ _Especificação completa em [docs/09-painel-operacional.md](./09-painel-operaci
 - [x] **Métricas em tempo real** — `lib/data/operational.ts`; `getOverviewMetrics()` com 12 queries paralelas via `Promise.all`
 - [x] **Overview page** — 4 seções de métricas: Usuários, Conteúdo, Atividade dos alunos, Tutor IA; 1 seção de placeholders (Sistema & Infraestrutura — dados externos para fase futura)
 
-### Próximas seções do painel (em breve)
+### Item C — Design System
+
+- [x] **Página `/operacional/design`** — referência visual completa: paleta de cores (CSS vars + HSL), escala tipográfica, border radius, variantes de Button, variantes de Badge, Progress, Avatar, inventário de componentes
+- [x] **Sidebar dinâmica** — `_components/sidebar-nav.tsx` client component com `usePathname()`; item ativo destacado; itens "em breve" continuam como `<span>`
+
+### Seções pendentes do painel (em breve)
 
 - [ ] Usuários — listagem e detalhes de perfis
 - [ ] Alunos — visão agregada de atividade
@@ -178,10 +183,9 @@ _Especificação completa em [docs/09-painel-operacional.md](./09-painel-operaci
 - [ ] Tutor IA — logs de sessões e segurança
 - [ ] Uploads — gerenciamento de arquivos
 - [ ] Sistema — infraestrutura e saúde
-- [ ] Design System — tokens e componentes
 - [ ] Logs — eventos do sistema
 - [ ] Configurações — ajustes operacionais
 
 ---
 
-_Última atualização: 2026-05-16 — Fase 6 iniciada: widget operacional e overview com métricas reais concluídos._
+_Última atualização: 2026-05-16 — Fase 6: Design System concluído. Sidebar com highlight de rota ativa._

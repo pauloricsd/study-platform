@@ -14,16 +14,17 @@ import {
   Settings,
   ExternalLink,
 } from "lucide-react";
+import { SidebarNav } from "./_components/sidebar-nav";
 
 const navItems = [
-  { href: "/operacional", label: "Overview", icon: LayoutDashboard, active: true },
+  { href: "/operacional", label: "Overview", icon: LayoutDashboard },
   { href: "/operacional/usuarios", label: "Usuários", icon: Users, soon: true },
   { href: "/operacional/alunos", label: "Alunos", icon: GraduationCap, soon: true },
   { href: "/operacional/estudos", label: "Estudos", icon: BookOpen, soon: true },
   { href: "/operacional/tutor", label: "Tutor IA", icon: MessageCircle, soon: true },
   { href: "/operacional/uploads", label: "Uploads", icon: Upload, soon: true },
   { href: "/operacional/sistema", label: "Sistema", icon: Server, soon: true },
-  { href: "/operacional/design", label: "Design System", icon: Palette, soon: true },
+  { href: "/operacional/design", label: "Design System", icon: Palette },
   { href: "/operacional/logs", label: "Logs", icon: ScrollText, soon: true },
   { href: "/operacional/configuracoes", label: "Config.", icon: Settings, soon: true },
 ];
@@ -67,31 +68,7 @@ export default async function OperationalLayout({
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-          {navItems.map(({ href, label, icon: Icon, soon }) =>
-            soon ? (
-              <span
-                key={href}
-                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-gray-500 cursor-default select-none"
-              >
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                <span>{label}</span>
-                <span className="ml-auto text-[9px] font-medium text-gray-600 bg-gray-800 rounded px-1 py-0.5">
-                  em breve
-                </span>
-              </span>
-            ) : (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm bg-gray-700/60 text-gray-100"
-              >
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                <span>{label}</span>
-              </Link>
-            )
-          )}
-        </nav>
+        <SidebarNav items={navItems} />
 
         {/* Footer */}
         <div className="border-t border-gray-800 px-3 py-3 space-y-2">
