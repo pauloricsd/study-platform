@@ -68,26 +68,29 @@ export default async function OperationalLayout({
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-          {navItems.map(({ href, label, icon: Icon, soon }) => (
-            <Link
-              key={href}
-              href={soon ? "#" : href}
-              className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors ${
-                !soon
-                  ? "bg-gray-700/60 text-gray-100"
-                  : "text-gray-500 hover:text-gray-400 cursor-default"
-              }`}
-              onClick={(e) => soon && e.preventDefault()}
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-              <span>{label}</span>
-              {soon && (
+          {navItems.map(({ href, label, icon: Icon, soon }) =>
+            soon ? (
+              <span
+                key={href}
+                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-gray-500 cursor-default select-none"
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span>{label}</span>
                 <span className="ml-auto text-[9px] font-medium text-gray-600 bg-gray-800 rounded px-1 py-0.5">
                   em breve
                 </span>
-              )}
-            </Link>
-          ))}
+              </span>
+            ) : (
+              <Link
+                key={href}
+                href={href}
+                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm bg-gray-700/60 text-gray-100"
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span>{label}</span>
+              </Link>
+            )
+          )}
         </nav>
 
         {/* Footer */}
