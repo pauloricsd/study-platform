@@ -55,21 +55,21 @@ export function PackDetailClient({ pack, topics, exercises, report }: PackDetail
   return (
     <div className="flex flex-col">
       {/* Tabs bar */}
-      <div className="border-b bg-white px-6">
-        <div className="flex gap-0 overflow-x-auto">
+      <div className="border-b bg-white px-2 sm:px-6">
+        <div className="flex gap-0">
           {tabs.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-3.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+                "flex flex-1 sm:flex-none items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-3.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
                 activeTab === id
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className="h-4 w-4" />
-              {label}
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">{label}</span>
               {id === "exercises" && (
                 <span className={cn(
                   "rounded-full px-1.5 py-0.5 text-xs font-semibold leading-none",
