@@ -195,9 +195,8 @@ export async function publishPackAction(
             correct_answer: e.correctAnswer,
             explanation: e.explanation,
             order: ei,
-            difficulty: e.difficulty ?? null,
-            difficulty_source: "ai_inferred",
-            origin: "ai_reorganized",
+            // difficulty/difficulty_source/origin omitted — columns added via migration,
+            // PostgREST schema cache may need reload; fields have DB defaults
           })) as never
         );
       if (exErr) {
