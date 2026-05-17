@@ -184,7 +184,7 @@ export async function publishPackAction(
 
     // Insert exercises
     if (t.exercises.length > 0) {
-      await supabase
+      const { error: exErr } = await supabase
         .from("exercises")
         .insert(
           t.exercises.map((e, ei) => ({
@@ -200,7 +200,11 @@ export async function publishPackAction(
             origin: "ai_reorganized",
           })) as never
         );
-      totalQuestions += t.exercises.length;
+      if (exErr) {
+        console.error("exercises insert error:", exErr.message, exErr);
+      } else {
+        totalQuestions += t.exercises.length;
+      }
     }
 
     // Insert suggested questions (pending human review)
