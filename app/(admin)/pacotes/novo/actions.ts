@@ -207,25 +207,24 @@ export async function publishPackAction(
       }
     }
 
-    // Insert suggested questions (pending human review) — non-fatal if schema cache not ready
+    // Insert suggested questions via RPC (bypasses PostgREST schema cache)
     if (t.suggestedQuestions && t.suggestedQuestions.length > 0) {
-      const { error: sqErr } = await supabase
-        .from("suggested_questions")
-        .insert(
-          t.suggestedQuestions.map((sq) => ({
-            pack_id: packId,
-            topic_id: topicId,
-            type: sq.type,
-            statement: sq.statement,
-            choices: sq.choices ?? null,
-            correct_answer: sq.correctAnswer,
-            explanation: sq.explanation,
-            difficulty: sq.difficulty ?? null,
-            suggestion_reason: sq.suggestionReason ?? null,
-            status: "suggested",
-          })) as never
-        );
-      if (sqErr) console.warn("suggested_questions insert skipped:", sqErr.message);
+      const payload = t.suggestedQuestions.map((sq) => ({
+        pack_id: packId,
+        topic_id: topicId,
+        type: sq.type,
+        statement: sq.statement,
+        choices: sq.choices ?? null,
+        correct_answer: sq.correctAnswer,
+        explanation: sq.explanation,
+        difficulty: sq.difficulty ?? null,
+        suggestion_reason: sq.suggestionReason ?? null,
+      }));
+      const { error: sqErr } = await supabase.rpc(
+        "insert_suggested_questions" as never,
+        { questions: payload } as never
+      );
+      if (sqErr) console.warn("suggested_questions rpc skipped:", sqErr.message);
     }
   }
 

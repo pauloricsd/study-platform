@@ -17,28 +17,20 @@ export async function getSuggestedQuestionsForPack(
 ): Promise<SuggestedQuestion[]> {
   const supabase = createAdminClient();
 
-  const { data, error } = await supabase
-    .from("suggested_questions")
-    .select("*, topics(title)")
-    .eq("pack_id" as never, packId)
-    .order("created_at" as never, { ascending: true });
+  // Use RPC to bypass PostgREST schema cache for new table
+  const { data, error } = await supabase.rpc(
+    "get_suggested_questions" as never,
+    { p_pack_id: packId } as never
+  );
 
   if (error || !data) return [];
 
-  return (data as unknown as (SuggestedQuestionRow & { topics: { title: string } | null })[]).map((row) => ({
-    ...row,
-    topic_title: row.topics?.title ?? undefined,
-  }));
+  return (data as unknown as SuggestedQuestion[]);
 }
 
 export async function getPendingSuggestionsCount(packId: string): Promise<number> {
-  const supabase = createAdminClient();
-  const { count } = await supabase
-    .from("suggested_questions")
-    .select("*", { count: "exact", head: true })
-    .eq("pack_id" as never, packId)
-    .eq("status" as never, "suggested");
-  return count ?? 0;
+  const suggestions = await getSuggestedQuestionsForPack(packId);
+  return suggestions.filter((s) => s.status === "suggested").length;
 }
 
 // ─── Mutations ────────────────────────────────────────────────────────────────
@@ -91,16 +83,12 @@ export async function approveSuggestedQuestion(
 
   const exerciseRow = exercise as { id: string };
 
-  // Mark suggestion as approved
-  await supabase
-    .from("suggested_questions")
-    .update({
-      status: "approved",
-      reviewed_at: new Date().toISOString(),
-      reviewed_by: profile.id,
-      approved_as_exercise_id: exerciseRow.id,
-    } as never)
-    .eq("id" as never, suggestionId);
+  // Mark suggestion as approved via RPC
+  await supabase.rpc("approve_suggested_question" as never, {
+    p_suggestion_id: suggestionId,
+    p_reviewed_by: profile.id,
+    p_exercise_id: exerciseRow.id,
+  } as never);
 
   return { exerciseId: exerciseRow.id };
 }
@@ -113,15 +101,10 @@ export async function rejectSuggestedQuestion(
   const profile = await getCurrentProfile();
   if (!profile) return { error: "Não autenticado." };
 
-  await supabase
-    .from("suggested_questions")
-    .update({
-      status: "rejected",
-      reviewed_at: new Date().toISOString(),
-      reviewed_by: profile.id,
-    } as never)
-    .eq("id" as never, suggestionId)
-    .eq("pack_id" as never, packId);
+  await supabase.rpc("reject_suggested_question" as never, {
+    p_suggestion_id: suggestionId,
+    p_reviewed_by: profile.id,
+  } as never);
 }
 
 export async function approveSuggestedQuestionsBatch(
