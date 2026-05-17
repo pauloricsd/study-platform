@@ -198,6 +198,9 @@ function MultipleChoiceInput({
   answerState: AnswerState;
   onSelect: (id: string) => void;
 }) {
+  // Only reveal which answer is correct when the attempt is fully resolved
+  const revealCorrect = answerState === "correct" || answerState === "revealed";
+
   return (
     <div className="space-y-2.5">
       {exercise.choices!.map((choice) => {
@@ -218,7 +221,7 @@ function MultipleChoiceInput({
               !answered &&
                 isSelected &&
                 "border-primary bg-primary/10 font-medium",
-              answered &&
+              revealCorrect &&
                 isCorrect &&
                 "border-emerald-300 bg-emerald-50 text-emerald-800 font-medium",
               answered &&
@@ -226,8 +229,12 @@ function MultipleChoiceInput({
                 !isCorrect &&
                 "border-red-300 bg-red-50 text-red-800",
               answered &&
+                !revealCorrect &&
                 !isSelected &&
+                "opacity-50 bg-muted/30",
+              revealCorrect &&
                 !isCorrect &&
+                !isSelected &&
                 "opacity-50 bg-muted/30"
             )}
           >
@@ -242,7 +249,7 @@ function MultipleChoiceInput({
               {choice.label}
             </span>
             {choice.text}
-            {answered && isCorrect && (
+            {revealCorrect && isCorrect && (
               <CheckCircle2 className="ml-auto h-4 w-4 shrink-0 text-emerald-600" />
             )}
           </button>
@@ -264,6 +271,7 @@ function TrueFalseInput({
   onSelect: (v: string) => void;
 }) {
   const answered = answerState !== "idle";
+  const revealCorrect = answerState === "correct" || answerState === "revealed";
   return (
     <div className="flex gap-3">
       {[
@@ -283,7 +291,7 @@ function TrueFalseInput({
                 !isSelected &&
                 "hover:border-primary/40 hover:bg-primary/5",
               !answered && isSelected && "border-primary bg-primary/10 text-primary",
-              answered &&
+              revealCorrect &&
                 isCorrect &&
                 "border-emerald-300 bg-emerald-50 text-emerald-800",
               answered &&
@@ -293,7 +301,7 @@ function TrueFalseInput({
               answered && !isSelected && !isCorrect && "opacity-40 bg-muted/30"
             )}
           >
-            {answered && isCorrect && (
+            {revealCorrect && isCorrect && (
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
             )}
             {label}
