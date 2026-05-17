@@ -45,10 +45,13 @@ interface PackDetailClientProps {
   suggestedQuestions: SuggestedQuestion[];
 }
 
-export function PackDetailClient({ pack, topics, exercises, report, suggestedQuestions }: PackDetailClientProps) {
+export function PackDetailClient({ pack, topics, exercises, report, suggestedQuestions: initialSuggestions }: PackDetailClientProps) {
   const [activeTab, setActiveTab] = useState<TabId>("content");
   const [selectedTopicId, setSelectedTopicId] = useState<string>(topics[0]?.id ?? "");
   const [topicsOpen, setTopicsOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState(initialSuggestions);
+
+  const pendingSuggestionsCount = suggestions.filter((s) => s.status === "suggested").length;
 
   const selectedTopic = topics.find((t) => t.id === selectedTopicId);
   const topicExercises = exercises.filter((e) => e.topicId === selectedTopicId);
@@ -83,17 +86,14 @@ export function PackDetailClient({ pack, topics, exercises, report, suggestedQue
                   {exercises.length}
                 </span>
               )}
-              {id === "suggestions" && (() => {
-                const pending = suggestedQuestions.filter((s) => s.status === "suggested").length;
-                return pending > 0 ? (
-                  <span className={cn(
-                    "rounded-full px-1.5 py-0.5 text-xs font-semibold leading-none",
-                    activeTab === id ? "bg-violet-100 text-violet-600" : "bg-violet-50 text-violet-500"
-                  )}>
-                    {pending}
-                  </span>
-                ) : null;
-              })()}
+              {id === "suggestions" && pendingSuggestionsCount > 0 && (
+                <span className={cn(
+                  "rounded-full px-1.5 py-0.5 text-xs font-semibold leading-none",
+                  activeTab === id ? "bg-violet-100 text-violet-600" : "bg-violet-50 text-violet-500"
+                )}>
+                  {pendingSuggestionsCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -368,7 +368,13 @@ export function PackDetailClient({ pack, topics, exercises, report, suggestedQue
       {/* Suggestions tab */}
       {activeTab === "suggestions" && (
         <div className="flex-1 overflow-y-auto bg-gray-50">
-          <SuggestedQuestionsTab packId={pack.id} initialSuggestions={suggestedQuestions} />
+          <SuggestedQuestionsTab
+            packId={pack.id}
+            initialSuggestions={suggestions}
+            onStatusChange={(id, status) =>
+              setSuggestions((prev) => prev.map((s) => s.id === id ? { ...s, status } : s))
+            }
+          />
         </div>
       )}
 

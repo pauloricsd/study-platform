@@ -204,19 +204,18 @@ function ReviewedCard({ sq, status }: { sq: SuggestedQuestion; status: "approved
 interface SuggestedQuestionsTabProps {
   packId: string;
   initialSuggestions: SuggestedQuestion[];
+  onStatusChange: (id: string, status: "approved" | "rejected") => void;
 }
 
-export function SuggestedQuestionsTab({ packId, initialSuggestions }: SuggestedQuestionsTabProps) {
-  const [suggestions, setSuggestions] = useState(initialSuggestions);
+export function SuggestedQuestionsTab({ packId, initialSuggestions, onStatusChange }: SuggestedQuestionsTabProps) {
+  const suggestions = initialSuggestions;
 
   const pending = suggestions.filter((s) => s.status === "suggested");
   const approved = suggestions.filter((s) => s.status === "approved");
   const rejected = suggestions.filter((s) => s.status === "rejected");
 
   function handleStatusChange(id: string, status: "approved" | "rejected") {
-    setSuggestions((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status } : s))
-    );
+    onStatusChange(id, status);
   }
 
   if (suggestions.length === 0) {
