@@ -56,7 +56,11 @@ export async function processPackAction(formData: FormData): Promise<
     .single();
 
   const pack = packResult.data as Pick<StudyPackRow, "id"> | null;
-  if (!pack) return { error: "Erro ao criar pacote no banco de dados." };
+  if (!pack) {
+    const msg = packResult.error?.message ?? "unknown";
+    console.error("pack insert error:", msg, packResult.error);
+    return { error: `Erro ao criar pacote: ${msg}` };
+  }
 
   const packId = pack.id;
 
