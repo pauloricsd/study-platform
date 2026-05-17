@@ -202,6 +202,7 @@ export async function publishPackAction(
         );
       if (exErr) {
         console.error("exercises insert error:", exErr.message, exErr);
+        return { error: `Erro ao salvar exercícios (tópico "${t.title}"): ${exErr.message}` };
       } else {
         totalQuestions += t.exercises.length;
       }
