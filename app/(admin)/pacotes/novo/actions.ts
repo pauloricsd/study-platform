@@ -207,9 +207,9 @@ export async function publishPackAction(
       }
     }
 
-    // Insert suggested questions (pending human review)
+    // Insert suggested questions (pending human review) — non-fatal if schema cache not ready
     if (t.suggestedQuestions && t.suggestedQuestions.length > 0) {
-      await supabase
+      const { error: sqErr } = await supabase
         .from("suggested_questions")
         .insert(
           t.suggestedQuestions.map((sq) => ({
@@ -225,6 +225,7 @@ export async function publishPackAction(
             status: "suggested",
           })) as never
         );
+      if (sqErr) console.warn("suggested_questions insert skipped:", sqErr.message);
     }
   }
 
