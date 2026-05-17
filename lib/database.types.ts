@@ -49,7 +49,7 @@ export type Database = {
           subject: string;
           grade: string;
           exam_name: string;
-          exam_date: string;
+          exam_date: string | null;
           status: "draft" | "in_review" | "published" | "archived";
           topics_count: number;
           questions_count: number;
@@ -64,7 +64,7 @@ export type Database = {
           subject: string;
           grade: string;
           exam_name: string;
-          exam_date: string;
+          exam_date?: string | null;
           status?: "draft" | "in_review" | "published" | "archived";
           topics_count?: number;
           questions_count?: number;
@@ -77,7 +77,7 @@ export type Database = {
           subject?: string;
           grade?: string;
           exam_name?: string;
-          exam_date?: string;
+          exam_date?: string | null;
           status?: "draft" | "in_review" | "published" | "archived";
           topics_count?: number;
           questions_count?: number;

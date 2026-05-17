@@ -42,7 +42,7 @@ CREATE TABLE public.study_packs (
   subject         TEXT NOT NULL,
   grade           TEXT NOT NULL,
   exam_name       TEXT NOT NULL,
-  exam_date       DATE NOT NULL,
+  exam_date       DATE,
   status          TEXT NOT NULL DEFAULT 'draft'
                   CHECK (status IN ('draft', 'in_review', 'published', 'archived')),
   topics_count    INT DEFAULT 0,
