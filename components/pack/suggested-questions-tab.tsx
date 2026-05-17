@@ -57,14 +57,14 @@ function SuggestionCard({ sq, packId, onStatusChange }: SuggestionCardProps) {
 
   function handleApprove() {
     startTransition(async () => {
-      const result = await approveSuggestedQuestion(sq.id, packId);
+      const result = await approveSuggestedQuestion(sq, packId);
       if (!("error" in result)) onStatusChange(sq.id, "approved");
     });
   }
 
   function handleReject() {
     startTransition(async () => {
-      await rejectSuggestedQuestion(sq.id, packId);
+      await rejectSuggestedQuestion(sq.id);
       onStatusChange(sq.id, "rejected");
     });
   }

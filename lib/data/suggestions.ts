@@ -17,15 +17,13 @@ export async function getSuggestedQuestionsForPack(
 ): Promise<SuggestedQuestion[]> {
   const supabase = createAdminClient();
 
-  // Use RPC to bypass PostgREST schema cache for new table
   const { data, error } = await supabase.rpc(
     "get_suggested_questions" as never,
     { p_pack_id: packId } as never
   );
 
   if (error || !data) return [];
-
-  return (data as unknown as SuggestedQuestion[]);
+  return data as unknown as SuggestedQuestion[];
 }
 
 export async function getPendingSuggestionsCount(packId: string): Promise<number> {
@@ -35,24 +33,15 @@ export async function getPendingSuggestionsCount(packId: string): Promise<number
 
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
+// Accept full suggestion data from client — avoids fetching from PostgREST
+// (table not yet in schema cache)
 export async function approveSuggestedQuestion(
-  suggestionId: string,
+  sq: SuggestedQuestion,
   packId: string
 ): Promise<{ exerciseId: string } | { error: string }> {
   const supabase = createAdminClient();
   const profile = await getCurrentProfile();
   if (!profile) return { error: "Não autenticado." };
-
-  // Fetch the suggestion
-  const { data: sqRaw, error: fetchErr } = await supabase
-    .from("suggested_questions")
-    .select("*")
-    .eq("id", suggestionId)
-    .eq("pack_id", packId)
-    .single();
-
-  if (fetchErr || !sqRaw) return { error: "Sugestão não encontrada." };
-  const sq = sqRaw as SuggestedQuestionRow;
   if (sq.status !== "suggested") return { error: "Sugestão já processada." };
 
   // Count existing exercises in the topic to set the order
@@ -72,20 +61,20 @@ export async function approveSuggestedQuestion(
       correct_answer: sq.correct_answer,
       explanation: sq.explanation,
       order: existingCount ?? 0,
-      difficulty: sq.difficulty as never,
-      difficulty_source: "ai_inferred",
-      origin: "ai_suggested",
     } as never)
     .select("id")
     .single();
 
-  if (insertErr || !exercise) return { error: "Erro ao criar exercício." };
+  if (insertErr || !exercise) {
+    console.error("approve exercise insert error:", insertErr?.message);
+    return { error: `Erro ao criar exercício: ${insertErr?.message}` };
+  }
 
   const exerciseRow = exercise as { id: string };
 
   // Mark suggestion as approved via RPC
   await supabase.rpc("approve_suggested_question" as never, {
-    p_suggestion_id: suggestionId,
+    p_suggestion_id: sq.id,
     p_reviewed_by: profile.id,
     p_exercise_id: exerciseRow.id,
   } as never);
@@ -95,7 +84,6 @@ export async function approveSuggestedQuestion(
 
 export async function rejectSuggestedQuestion(
   suggestionId: string,
-  packId: string
 ): Promise<void | { error: string }> {
   const supabase = createAdminClient();
   const profile = await getCurrentProfile();
@@ -108,14 +96,14 @@ export async function rejectSuggestedQuestion(
 }
 
 export async function approveSuggestedQuestionsBatch(
-  suggestionIds: string[],
+  suggestions: SuggestedQuestion[],
   packId: string
 ): Promise<{ approved: number; errors: number }> {
   let approved = 0;
   let errors = 0;
 
-  for (const id of suggestionIds) {
-    const result = await approveSuggestedQuestion(id, packId);
+  for (const sq of suggestions) {
+    const result = await approveSuggestedQuestion(sq, packId);
     if ("error" in result) errors++;
     else approved++;
   }
