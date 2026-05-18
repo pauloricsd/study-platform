@@ -44,7 +44,21 @@
       "Bash(vercel whoami *)",
       "Bash(vercel ls *)",
       "Bash(vercel --prod --yes)",
-      "Bash(Get-ChildItem -Path . -Directory)"
+      "Bash(Get-ChildItem -Path . -Directory)",
+      "Bash(git commit *)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(git tag -a v1.0 -m 'Versao estavel — Fases 0, 1, 2, 3 e 5 completas *)",
+      "Bash(where gh *)",
+      "Bash(xargs grep -l \"createStudent\\\\|Criar aluno\\\\|criar conta\")",
+      "Bash(Remove-Item -Recurse -Force \"D:\\\\Github\\\\Study platform\\\\.next\\\\cache\" -ErrorAction SilentlyContinue)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Github\\\\Study platform\\\\app\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(dir -s app\\\\estudar -Recurse)",
+      "Bash(findstr /E \"\\\\.tsx$|\\\\.ts$\")",
+      "Bash(Get-ChildItem -Path app\\\\estudar -Recurse -Include \"*.tsx\",\"*.ts\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(node -e \"const { Cake } = require\\('lucide-react'\\); console.log\\(typeof Cake\\)\")"
     ]
   }
 }
