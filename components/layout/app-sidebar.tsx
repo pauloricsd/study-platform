@@ -20,6 +20,7 @@ import {
   Compass,
   RotateCcw,
   BarChart2,
+  CalendarDays,
 } from "lucide-react";
 
 export type SidebarVariant = "admin" | "student";
@@ -39,6 +40,7 @@ const adminNav: NavItem[] = [
   { href: "/grupos", label: "Grupos", icon: UsersRound },
   { href: "/materiais", label: "Materiais", icon: FileText },
   { href: "/relatorios", label: "Relatórios", icon: BarChart2 },
+  { href: "/calendario", label: "Calendário", icon: CalendarDays },
 ];
 
 const studentNav: NavItem[] = [
@@ -46,6 +48,7 @@ const studentNav: NavItem[] = [
   { href: "/estudar/historico", label: "Revisão", icon: RotateCcw },
   { href: "/estudar/explorar", label: "Explorar", icon: Compass, badge: "Em breve", disabled: true },
   { href: "/estudar/materiais", label: "Meus Materiais", icon: FileText },
+  { href: "/estudar/calendario", label: "Calendário", icon: CalendarDays },
 ];
 
 const adminBottomNav: NavItem[] = [

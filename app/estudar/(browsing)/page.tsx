@@ -2,8 +2,10 @@ import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Topbar } from "@/components/layout/topbar";
+import { EventCalendar } from "@/components/ui/event-calendar";
 import { getCurrentProfile } from "@/lib/data/auth";
 import { getStudentPacks } from "@/lib/data/packs";
+import { getStudentCalendarEvents } from "@/lib/data/calendar";
 import { getTopicHistory } from "@/lib/data/progress";
 import { getTopicsByPack } from "@/lib/data/topics";
 import { subjectColors, getDaysUntilExam, getCompletionRate, getAccuracyRate } from "@/lib/mock-data";
@@ -45,6 +47,10 @@ export default async function StudentHome() {
 
   const myPacks = profile
     ? await getStudentPacks(profile.id)
+    : [];
+
+  const calendarEvents = profile
+    ? await getStudentCalendarEvents(profile.id)
     : [];
 
   // ── Recommendations ──────────────────────────────────────────────────────────
@@ -306,6 +312,26 @@ export default async function StudentHome() {
             </div>
           ))}
         </section>
+
+        {/* Calendar widget */}
+        {calendarEvents.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Calendário
+              </h2>
+              <Link
+                href="/estudar/calendario"
+                className="text-[10px] text-primary font-medium hover:underline"
+              >
+                Ver completo →
+              </Link>
+            </div>
+            <div className="rounded-2xl border bg-white p-4">
+              <EventCalendar events={calendarEvents} compact />
+            </div>
+          </section>
+        )}
 
         {/* Recommendations */}
         {topRecs.length > 0 && (

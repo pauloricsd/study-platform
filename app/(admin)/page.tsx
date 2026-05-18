@@ -2,11 +2,13 @@ import Link from "next/link";
 import { Topbar } from "@/components/layout/topbar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StudyPackCard } from "@/components/dashboard/study-pack-card";
+import { EventCalendar } from "@/components/ui/event-calendar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { getPacks } from "@/lib/data/packs";
 import { getStudents } from "@/lib/data/students";
+import { getAdminCalendarEvents } from "@/lib/data/calendar";
 import { getDaysUntilExam, getCompletionRate } from "@/lib/mock-data";
 import {
   Plus,
@@ -16,12 +18,15 @@ import {
   TrendingUp,
   ArrowRight,
   Flame,
-  CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const [allPacksRaw, students] = await Promise.all([getPacks(), getStudents()]);
+  const [allPacksRaw, students, calendarEvents] = await Promise.all([
+    getPacks(),
+    getStudents(),
+    getAdminCalendarEvents(),
+  ]);
 
   const allPacks = allPacksRaw.filter((p) => p.status !== "archived");
   const publishedPacks = allPacks.filter((p) => p.status === "published");
@@ -245,42 +250,21 @@ export default async function DashboardPage() {
             )}
 
             <section>
-              <h3 className="font-semibold text-foreground mb-3">
-                Próximas provas
-              </h3>
-              <div className="rounded-xl border bg-white divide-y">
-                {[...allPacks]
-                  .filter((p) => { const d = getDaysUntilExam(p.examDate); return d !== null && d > 0; })
-                  .sort((a, b) => (getDaysUntilExam(a.examDate) ?? 0) - (getDaysUntilExam(b.examDate) ?? 0))
-                  .slice(0, 4)
-                  .map((pack) => {
-                    const days = getDaysUntilExam(pack.examDate);
-                    return (
-                      <div key={pack.id} className="flex items-center gap-3 p-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                          <CalendarDays className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground line-clamp-1">
-                            {pack.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {pack.examName}
-                          </p>
-                        </div>
-                        <span
-                          className={cn(
-                            "text-xs font-semibold shrink-0",
-                            days !== null && days <= 7
-                              ? "text-amber-600"
-                              : "text-muted-foreground"
-                          )}
-                        >
-                          {days !== null ? `${days}d` : "—"}
-                        </span>
-                      </div>
-                    );
-                  })}
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-foreground">Calendário</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground h-8 text-xs gap-1"
+                  asChild
+                >
+                  <Link href="/calendario">
+                    Ver completo <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="rounded-xl border bg-white p-4">
+                <EventCalendar events={calendarEvents} compact />
               </div>
             </section>
           </div>
