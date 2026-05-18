@@ -314,24 +314,22 @@ export default async function StudentHome() {
         </section>
 
         {/* Calendar widget */}
-        {calendarEvents.length > 0 && (
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Calendário
-              </h2>
-              <Link
-                href="/estudar/calendario"
-                className="text-[10px] text-primary font-medium hover:underline"
-              >
-                Ver completo →
-              </Link>
-            </div>
-            <div className="rounded-2xl border bg-white p-4">
-              <EventCalendar events={calendarEvents} compact />
-            </div>
-          </section>
-        )}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Calendário
+            </h2>
+            <Link
+              href="/estudar/calendario"
+              className="text-[10px] text-primary font-medium hover:underline"
+            >
+              Ver completo →
+            </Link>
+          </div>
+          <div className="rounded-2xl border bg-white p-4">
+            <EventCalendar events={calendarEvents} compact />
+          </div>
+        </section>
 
         {/* Recommendations */}
         {topRecs.length > 0 && (
