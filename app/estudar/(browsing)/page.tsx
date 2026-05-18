@@ -10,6 +10,7 @@ import { getTopicHistory } from "@/lib/data/progress";
 import { getTopicsByPack } from "@/lib/data/topics";
 import { subjectColors, getDaysUntilExam, getCompletionRate, getAccuracyRate } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   PlayCircle,
   CalendarDays,
@@ -22,6 +23,7 @@ import {
   Lightbulb,
   AlertTriangle,
   RotateCcw,
+  Sparkles,
 } from "lucide-react";
 
 function getGreeting() {
@@ -298,6 +300,17 @@ export default async function StudentHome() {
             {/* All packs */}
             <section className="space-y-3">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Meus estudos</h2>
+
+              {myPacks.length === 0 ? (
+                <EmptyState
+                  icon={Sparkles}
+                  iconColor="text-primary"
+                  iconBg="bg-primary/10"
+                  title="Tudo pronto para começar!"
+                  description="Quando seu professor atribuir um pacote de estudos ao seu grupo, ele aparecerá aqui. Fique de olho! 📚"
+                  decorative
+                />
+              ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {myPacks.map((pack) => {
                   const completion = getCompletionRate(pack.progress);
@@ -335,6 +348,7 @@ export default async function StudentHome() {
                   );
                 })}
               </div>
+              )}
             </section>
 
             <div className="h-4" />

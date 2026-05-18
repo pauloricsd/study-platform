@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Search, X, BookOpen, ChevronRight,
-  Clock, CalendarDays, CheckCircle2, AlertCircle,
+  Clock, CalendarDays, CheckCircle2, AlertCircle, Inbox,
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { getDaysUntilExam, getCompletionRate, getAccuracyRate } from "@/lib/mock-data";
@@ -200,17 +201,15 @@ export function MateriaisClient({ packs }: MateriaisClientProps) {
 
   if (packs.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
-          <BookOpen className="h-7 w-7 text-muted-foreground" />
-        </div>
-        <div>
-          <p className="text-base font-semibold text-foreground">Nenhum material ainda</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Quando um professor atribuir um pacote ao seu grupo, ele aparecerá aqui.
-          </p>
-        </div>
-      </div>
+      <EmptyState
+        icon={Inbox}
+        iconColor="text-sky-600"
+        iconBg="bg-sky-100"
+        title="Nenhum material disponível ainda"
+        description="Quando seu professor atribuir um pacote de estudos ao seu grupo, ele aparecerá aqui automaticamente. Por enquanto, pode relaxar! 😊"
+        decorative
+        className="py-24"
+      />
     );
   }
 
@@ -307,11 +306,21 @@ export function MateriaisClient({ packs }: MateriaisClientProps) {
 
       {/* ── Results ──────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border bg-white py-12 text-center">
-          <p className="text-sm text-muted-foreground">
-            Nenhum material encontrado para os filtros aplicados.
-          </p>
-        </div>
+        <EmptyState
+          icon={Search}
+          iconColor="text-muted-foreground"
+          iconBg="bg-muted/60"
+          title="Nenhum resultado encontrado"
+          description="Tente outros termos ou remova alguns filtros para ver mais materiais."
+          action={
+            <button
+              onClick={() => { setActiveSubjects(new Set()); setActiveGrades(new Set()); setSearch(""); }}
+              className="text-sm text-primary font-medium hover:underline"
+            >
+              Limpar filtros
+            </button>
+          }
+        />
       ) : (
         <div className="space-y-8">
           {Object.entries(grouped).map(([subject, gradeMap]) => {

@@ -10,8 +10,9 @@ import { type StudyPack, type StudyPackStatus, statusLabels, subjectColors } fro
 import { cn } from "@/lib/utils";
 import {
   Plus, Search, BookOpen, CheckCircle2, Clock, FileText,
-  Archive, RotateCcw, Trash2, AlertTriangle,
+  Archive, RotateCcw, Trash2, AlertTriangle, Sparkles,
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { restorePackAction, deletePackPermanentlyAction } from "./actions";
 
 type FilterTab = "all" | StudyPackStatus;
@@ -220,10 +221,13 @@ export function PacksListClient({ packs }: PacksListClientProps) {
             </div>
 
             {archivedPacks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-white py-16 text-center">
-                <Archive className="h-10 w-10 text-muted-foreground/30 mb-3" />
-                <p className="text-sm font-medium text-muted-foreground">Nenhum pacote arquivado</p>
-              </div>
+              <EmptyState
+                icon={Archive}
+                iconColor="text-muted-foreground"
+                iconBg="bg-muted/50"
+                title="Nenhum pacote arquivado"
+                description="Pacotes que você arquivar aparecerão aqui. Eles ficam ocultos para os alunos mas podem ser restaurados a qualquer momento."
+              />
             ) : (
               <div className="space-y-2">
                 {archivedPacks.map((pack) => (
@@ -246,21 +250,43 @@ export function PacksListClient({ packs }: PacksListClientProps) {
                 <StudyPackCard key={pack.id} pack={pack} />
               ))}
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-white py-16 text-center">
-              <BookOpen className="h-10 w-10 text-muted-foreground/30 mb-3" />
-              <p className="text-sm font-medium text-muted-foreground">
-                {search ? `Nenhum pacote encontrado para "${search}"` : "Nenhum pacote nesta categoria"}
-              </p>
-              {search && (
-                <button
-                  onClick={() => setSearch("")}
-                  className="mt-2 text-xs text-primary hover:underline"
-                >
+          ) : search ? (
+            <EmptyState
+              icon={Search}
+              iconColor="text-muted-foreground"
+              iconBg="bg-muted/50"
+              title={`Nenhum resultado para "${search}"`}
+              description="Tente buscar por outro título, disciplina ou série."
+              action={
+                <button onClick={() => setSearch("")} className="text-sm text-primary font-medium hover:underline">
                   Limpar busca
                 </button>
-              )}
-            </div>
+              }
+            />
+          ) : activeTab === "all" ? (
+            <EmptyState
+              icon={Sparkles}
+              iconColor="text-primary"
+              iconBg="bg-primary/10"
+              title="Crie seu primeiro pacote"
+              description="Importe um PDF ou crie manualmente um conjunto de materiais de estudo para seus alunos."
+              decorative
+              action={
+                <div className="flex flex-wrap gap-3 justify-center">
+                  <Button asChild>
+                    <Link href="/pacotes/novo"><Plus className="h-4 w-4 mr-1.5" />Novo pacote</Link>
+                  </Button>
+                </div>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon={BookOpen}
+              iconColor="text-muted-foreground"
+              iconBg="bg-muted/50"
+              title="Nenhum pacote nesta categoria"
+              description="Não há pacotes com este status no momento."
+            />
           )
         )}
     </main>

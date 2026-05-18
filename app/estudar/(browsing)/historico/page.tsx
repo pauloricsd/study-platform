@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Topbar } from "@/components/layout/topbar";
 import { Progress } from "@/components/ui/progress";
 import { getCurrentProfile } from "@/lib/data/auth";
@@ -17,7 +19,6 @@ import {
   Circle,
   PlayCircle,
   RotateCcw,
-  BookOpen,
   Target,
   Calendar,
   History,
@@ -130,16 +131,19 @@ export default async function HistoricoPage() {
         </div>
 
         {rows.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-white py-16 text-center">
-            <BookOpen className="h-10 w-10 text-muted-foreground/30 mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">Nenhum tópico ainda</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Comece a estudar para ver seu histórico aqui.
-            </p>
-            <Link href="/estudar" className="mt-4 text-sm text-primary hover:underline font-medium">
-              Ir para meus pacotes →
-            </Link>
-          </div>
+          <EmptyState
+            icon={Target}
+            iconColor="text-violet-600"
+            iconBg="bg-violet-100"
+            title="Nenhum estudo registrado ainda"
+            description="Complete tópicos dos seus pacotes de estudo e o seu progresso e histórico aparecerão aqui."
+            decorative
+            action={
+              <Button asChild>
+                <Link href="/estudar/materiais">Ver meus materiais</Link>
+              </Button>
+            }
+          />
         ) : (
           <div className="space-y-8">
             {groups.map(({ key, rows: groupRows }) => {

@@ -6,6 +6,7 @@ import { getStudents } from "@/lib/data/students";
 import { getPacks } from "@/lib/data/packs";
 import { getCompletionRate, getAccuracyRate } from "@/lib/mock-data";
 import { NovoAlunoDialog } from "./novo-aluno-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Users,
   BookOpen,
@@ -110,6 +111,17 @@ export default async function StudentsPage() {
 
         {/* Student list */}
         <div className="space-y-3">
+          {students.length === 0 && (
+            <EmptyState
+              icon={Users}
+              iconColor="text-sky-600"
+              iconBg="bg-sky-100"
+              title="Nenhum aluno cadastrado ainda"
+              description="Adicione alunos para atribuir pacotes de estudo e acompanhar o progresso de cada um."
+              decorative
+              action={<NovoAlunoDialog />}
+            />
+          )}
           {students.map((student, i) => {
             const stats = allStats[i];
             return (
