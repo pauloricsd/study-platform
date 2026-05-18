@@ -10,7 +10,7 @@ export default async function MateriaisPage() {
   return (
     <>
       <Topbar title="Meus Materiais" />
-      <main className="mx-auto max-w-lg px-4 py-6">
+      <main className="mx-auto max-w-5xl px-4 lg:px-8 py-6">
         <MateriaisClient packs={packs} />
       </main>
     </>

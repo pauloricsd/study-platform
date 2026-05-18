@@ -12,8 +12,8 @@ export default async function StudentCalendarPage() {
   return (
     <>
       <Topbar title="Calendário" />
-      <main className="mx-auto max-w-lg px-4 py-6">
-        <div className="rounded-2xl border bg-white p-5">
+      <main className="mx-auto max-w-2xl px-4 lg:px-8 py-6">
+        <div className="rounded-2xl border bg-white p-5 lg:p-8">
           <EventCalendar events={events} />
         </div>
       </main>

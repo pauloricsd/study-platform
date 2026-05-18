@@ -218,7 +218,7 @@ export function MateriaisClient({ packs }: MateriaisClientProps) {
     <div className="space-y-5">
 
       {/* ── Stats header ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 lg:grid-cols-3 gap-3">
         {[
           { label: "Pacotes",   value: `${donePacks}/${packs.length}`, sub: "concluídos" },
           { label: "Tópicos",   value: totalTopics,                    sub: "no total"   },
@@ -313,7 +313,7 @@ export function MateriaisClient({ packs }: MateriaisClientProps) {
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {Object.entries(grouped).map(([subject, gradeMap]) => {
             const strip = SUBJECT_COLORS[subject] ?? "bg-slate-400";
             const totalInSubject = Object.values(gradeMap).reduce((s, arr) => s + arr.length, 0);
@@ -339,9 +339,11 @@ export function MateriaisClient({ packs }: MateriaisClientProps) {
                         {grade}
                       </p>
                     )}
-                    {gradePacks.map((pack) => (
-                      <PackCard key={pack.id} pack={pack} />
-                    ))}
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {gradePacks.map((pack) => (
+                        <PackCard key={pack.id} pack={pack} />
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
