@@ -16,6 +16,7 @@ interface PackFormInput {
 }
 
 // Step 2→3: upload PDF, extract text, call OpenAI, return topics + packId
+// If `packId` is already in formData (subsequent files), the existing pack is reused.
 export async function processPackAction(formData: FormData): Promise<
   { packId: string; topics: GeneratedTopic[] } | { error: string }
 > {
@@ -30,39 +31,47 @@ export async function processPackAction(formData: FormData): Promise<
   const feedbackModeRaw = formData.get("feedbackMode") as string | null;
   const feedbackMode: "immediate" | "adaptive" =
     feedbackModeRaw === "adaptive" ? "adaptive" : "immediate";
+  const existingPackId = (formData.get("packId") as string | null)?.trim() || null;
 
   if (!title || !subject || !grade || !examName) {
     return { error: "Dados do pacote incompletos." };
   }
 
   const supabase = createAdminClient();
-  const profile = await getCurrentProfile();
-  const adminId = profile?.id ?? null;
 
-  // 1. Create the pack as 'draft'
-  const packResult = await supabase
-    .from("study_packs")
-    .insert({
-      title,
-      subject,
-      grade,
-      exam_name: examName,
-      exam_date: examDate || null,
-      status: "draft",
-      created_by: adminId,
-      feedback_mode: feedbackMode,
-    } as never)
-    .select("id")
-    .single();
+  // 1. Create the pack as 'draft' only on the first file (no packId yet)
+  let packId: string;
 
-  const pack = packResult.data as Pick<StudyPackRow, "id"> | null;
-  if (!pack) {
-    const msg = packResult.error?.message ?? "unknown";
-    console.error("pack insert error:", msg, packResult.error);
-    return { error: `Erro ao criar pacote: ${msg}` };
+  if (existingPackId) {
+    packId = existingPackId;
+  } else {
+    const profile = await getCurrentProfile();
+    const adminId = profile?.id ?? null;
+
+    const packResult = await supabase
+      .from("study_packs")
+      .insert({
+        title,
+        subject,
+        grade,
+        exam_name: examName,
+        exam_date: examDate || null,
+        status: "draft",
+        created_by: adminId,
+        feedback_mode: feedbackMode,
+      } as never)
+      .select("id")
+      .single();
+
+    const pack = packResult.data as Pick<StudyPackRow, "id"> | null;
+    if (!pack) {
+      const msg = packResult.error?.message ?? "unknown";
+      console.error("pack insert error:", msg, packResult.error);
+      return { error: `Erro ao criar pacote: ${msg}` };
+    }
+
+    packId = pack.id;
   }
-
-  const packId = pack.id;
 
   // 2. Upload PDF to Supabase Storage
   const arrayBuffer = await file.arrayBuffer();

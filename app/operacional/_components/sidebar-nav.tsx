@@ -3,6 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  Users,
+  GraduationCap,
+  BookOpen,
+  MessageCircle,
+  Upload,
+  Server,
+  Palette,
+  ScrollText,
+  Settings,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface NavItem {
@@ -12,12 +24,25 @@ interface NavItem {
   soon?: boolean;
 }
 
-export function SidebarNav({ items }: { items: NavItem[] }) {
+const NAV_ITEMS: NavItem[] = [
+  { href: "/operacional", label: "Overview", icon: LayoutDashboard },
+  { href: "/operacional/usuarios", label: "Usuários", icon: Users, soon: true },
+  { href: "/operacional/alunos", label: "Alunos", icon: GraduationCap, soon: true },
+  { href: "/operacional/estudos", label: "Estudos", icon: BookOpen, soon: true },
+  { href: "/operacional/tutor", label: "Tutor IA", icon: MessageCircle, soon: true },
+  { href: "/operacional/uploads", label: "Uploads", icon: Upload, soon: true },
+  { href: "/operacional/sistema", label: "Sistema", icon: Server, soon: true },
+  { href: "/operacional/design", label: "Design System", icon: Palette },
+  { href: "/operacional/logs", label: "Logs", icon: ScrollText, soon: true },
+  { href: "/operacional/configuracoes", label: "Config.", icon: Settings, soon: true },
+];
+
+export function SidebarNav() {
   const pathname = usePathname();
 
   return (
     <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-      {items.map(({ href, label, icon: Icon, soon }) =>
+      {NAV_ITEMS.map(({ href, label, icon: Icon, soon }) =>
         soon ? (
           <span
             key={href}

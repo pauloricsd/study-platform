@@ -72,7 +72,8 @@ export async function getOverviewMetrics(): Promise<OverviewMetrics> {
     is_operational: boolean | null;
   }>;
   const packs = (packsResult.data ?? []) as Array<{ status: string }>;
-  const tutorSessions = (tutorSessionsResult.data ?? []) as Array<{ mode: string }>;
+  // Tutor tables may not exist yet — degrade gracefully
+  const tutorSessions = (tutorSessionsResult.error ? [] : (tutorSessionsResult.data ?? [])) as Array<{ mode: string }>;
 
   return {
     // Usuários
@@ -94,11 +95,11 @@ export async function getOverviewMetrics(): Promise<OverviewMetrics> {
     totalTopicProgress: progressCount.count ?? 0,
     totalUploads: uploadsCount.count ?? 0,
 
-    // Tutor IA
+    // Tutor IA (zero if tables don't exist yet)
     totalTutorSessions: tutorSessions.length,
-    totalTutorMessages: tutorMessagesCount.count ?? 0,
-    totalSafetyEvents: safetyEventsCount.count ?? 0,
-    blockedDirectAnswers: blockedCount.count ?? 0,
+    totalTutorMessages: tutorMessagesCount.error ? 0 : (tutorMessagesCount.count ?? 0),
+    totalSafetyEvents: safetyEventsCount.error ? 0 : (safetyEventsCount.count ?? 0),
+    blockedDirectAnswers: blockedCount.error ? 0 : (blockedCount.count ?? 0),
     studyModeSessions: tutorSessions.filter((s) => s.mode === "study").length,
     exerciseModeSessions: tutorSessions.filter((s) => s.mode === "exercise").length,
   };

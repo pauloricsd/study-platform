@@ -1,33 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/data/auth";
 import Link from "next/link";
-import {
-  LayoutDashboard,
-  Users,
-  GraduationCap,
-  BookOpen,
-  MessageCircle,
-  Upload,
-  Server,
-  Palette,
-  ScrollText,
-  Settings,
-  ExternalLink,
-} from "lucide-react";
+import { Settings, ExternalLink } from "lucide-react";
 import { SidebarNav } from "./_components/sidebar-nav";
-
-const navItems = [
-  { href: "/operacional", label: "Overview", icon: LayoutDashboard },
-  { href: "/operacional/usuarios", label: "Usuários", icon: Users, soon: true },
-  { href: "/operacional/alunos", label: "Alunos", icon: GraduationCap, soon: true },
-  { href: "/operacional/estudos", label: "Estudos", icon: BookOpen, soon: true },
-  { href: "/operacional/tutor", label: "Tutor IA", icon: MessageCircle, soon: true },
-  { href: "/operacional/uploads", label: "Uploads", icon: Upload, soon: true },
-  { href: "/operacional/sistema", label: "Sistema", icon: Server, soon: true },
-  { href: "/operacional/design", label: "Design System", icon: Palette },
-  { href: "/operacional/logs", label: "Logs", icon: ScrollText, soon: true },
-  { href: "/operacional/configuracoes", label: "Config.", icon: Settings, soon: true },
-];
 
 export default async function OperationalLayout({
   children,
@@ -68,7 +43,7 @@ export default async function OperationalLayout({
         </div>
 
         {/* Nav */}
-        <SidebarNav items={navItems} />
+        <SidebarNav />
 
         {/* Footer */}
         <div className="border-t border-gray-800 px-3 py-3 space-y-2">

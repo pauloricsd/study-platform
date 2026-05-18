@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { PasswordStrength, passwordValid } from "@/components/ui/password-strength";
 import { createStudent } from "./actions";
 
 // ── Grade options ─────────────────────────────────────────────────────────────
@@ -33,17 +35,17 @@ const GRADES = [
 // ── Success screen ─────────────────────────────────────────────────────────────
 function SuccessScreen({
   name,
-  loginEmail,
+  email,
   onClose,
 }: {
   name: string;
-  loginEmail: string;
+  email: string;
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
 
   function copy() {
-    navigator.clipboard.writeText(loginEmail);
+    navigator.clipboard.writeText(email);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -60,30 +62,31 @@ function SuccessScreen({
         </p>
       </div>
 
-      <div className="w-full rounded-xl border bg-muted/40 px-4 py-3 text-left space-y-2">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Login gerado (interno)
-        </p>
-        <div className="flex items-center gap-2">
-          <code className="flex-1 text-sm font-mono text-foreground truncate">
-            {loginEmail}
-          </code>
-          <button
-            onClick={copy}
-            className="shrink-0 rounded-md p-1.5 hover:bg-muted transition-colors"
-            title="Copiar"
-          >
-            {copied ? (
-              <Check className="h-4 w-4 text-emerald-500" />
-            ) : (
-              <Copy className="h-4 w-4 text-muted-foreground" />
-            )}
-          </button>
+      <div className="w-full rounded-xl border bg-muted/40 px-4 py-3 text-left space-y-3">
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            E-mail de login
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-sm font-mono text-foreground truncate">{email}</code>
+            <button
+              onClick={copy}
+              className="shrink-0 rounded-md p-1.5 hover:bg-muted transition-colors"
+              title="Copiar e-mail"
+            >
+              {copied
+                ? <Check className="h-4 w-4 text-emerald-500" />
+                : <Copy className="h-4 w-4 text-muted-foreground" />}
+            </button>
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Este é o e-mail interno usado pelo sistema. Você pode compartilhar
-          apenas a senha com o aluno — o login é opcional.
-        </p>
+
+        <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+          <p className="text-xs text-amber-700">
+            <span className="font-semibold">Lembre-se:</span> compartilhe a senha temporária
+            que você definiu com o aluno ou responsável.
+          </p>
+        </div>
       </div>
 
       <Button className="w-full" onClick={onClose}>
@@ -93,36 +96,69 @@ function SuccessScreen({
   );
 }
 
+// ── Field wrapper ─────────────────────────────────────────────────────────────
+function Field({
+  label,
+  htmlFor,
+  required,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-medium" htmlFor={htmlFor}>
+        {label}
+        {required && <span className="text-destructive ml-0.5">*</span>}
+      </label>
+      {children}
+    </div>
+  );
+}
+
 // ── Main dialog ───────────────────────────────────────────────────────────────
 export function NovoAlunoDialog() {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<{ name: string; loginEmail: string } | null>(null);
+  const [success, setSuccess] = useState<{ name: string; email: string } | null>(null);
+
+  const isPasswordValid = passwordValid(password);
 
   function handleClose() {
     setOpen(false);
-    // reset after close animation
     setTimeout(() => {
       setError(null);
       setSuccess(null);
       setShowPassword(false);
+      setPassword("");
     }, 300);
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    if (!isPasswordValid) {
+      setError("A senha não atende todos os requisitos.");
+      return;
+    }
+
     const fd = new FormData(e.currentTarget);
     const name = (fd.get("name") as string).trim();
+    const email = (fd.get("email") as string).trim();
 
     startTransition(async () => {
       const result = await createStudent(fd);
       if (result.error) {
         setError(result.error);
       } else {
-        setSuccess({ name, loginEmail: result.loginEmail! });
+        setSuccess({ name, email });
       }
     });
   }
@@ -135,11 +171,11 @@ export function NovoAlunoDialog() {
       </Button>
 
       <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); else setOpen(true); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           {success ? (
             <SuccessScreen
               name={success.name}
-              loginEmail={success.loginEmail}
+              email={success.email}
               onClose={handleClose}
             />
           ) : (
@@ -147,78 +183,114 @@ export function NovoAlunoDialog() {
               <DialogHeader>
                 <DialogTitle>Criar conta de aluno</DialogTitle>
                 <DialogDescription>
-                  Crie uma conta sem e-mail. O aluno acessa com login e senha definidos aqui.
+                  Preencha os dados do aluno. Campos marcados com * são obrigatórios.
                 </DialogDescription>
               </DialogHeader>
 
-              <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-                {/* Name */}
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium" htmlFor="name">
-                    Nome completo <span className="text-destructive">*</span>
-                  </label>
-                  <Input
-                    id="name"
-                    name="name"
-                    placeholder="Ex: Ana Luiza Costa"
-                    required
-                    autoFocus
-                    disabled={isPending}
-                  />
-                </div>
+              <form onSubmit={handleSubmit} className="space-y-5 pt-1">
 
-                {/* Grade */}
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium" htmlFor="grade">
-                    Série / Ano
-                  </label>
-                  <select
-                    id="grade"
-                    name="grade"
-                    disabled={isPending}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
-                  >
-                    <option value="">Selecione (opcional)</option>
-                    {GRADES.map((g) => (
-                      <option key={g} value={g}>
-                        {g}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {/* ── Dados pessoais ──────────────────────────────── */}
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Dados pessoais
+                  </p>
 
-                {/* Password */}
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium" htmlFor="password">
-                    Senha temporária <span className="text-destructive">*</span>
-                  </label>
-                  <div className="relative">
+                  <Field label="Nome completo" htmlFor="name" required>
                     <Input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Mínimo 6 caracteres"
-                      minLength={6}
+                      id="name"
+                      name="name"
+                      placeholder="Ex: Ana Luiza Costa"
+                      required
+                      autoFocus
+                      disabled={isPending}
+                    />
+                  </Field>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Data de nascimento" htmlFor="birthdate">
+                      <Input
+                        id="birthdate"
+                        name="birthdate"
+                        type="date"
+                        disabled={isPending}
+                        className="block"
+                      />
+                    </Field>
+
+                    <Field label="Série / Ano" htmlFor="grade">
+                      <select
+                        id="grade"
+                        name="grade"
+                        disabled={isPending}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+                      >
+                        <option value="">Selecione</option>
+                        {GRADES.map((g) => (
+                          <option key={g} value={g}>{g}</option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
+
+                  <Field label="Escola" htmlFor="school">
+                    <Input
+                      id="school"
+                      name="school"
+                      placeholder="Ex: Colégio Estadual Central"
+                      disabled={isPending}
+                    />
+                  </Field>
+                </div>
+
+                {/* ── Acesso ao sistema ───────────────────────────── */}
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Acesso ao sistema
+                  </p>
+
+                  <Field label="E-mail de login" htmlFor="email" required>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="Ex: joao.silva@gmail.com"
                       required
                       disabled={isPending}
-                      className="pr-10"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    O aluno poderá alterar a senha depois do primeiro acesso.
-                  </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Pode ser o e-mail do aluno ou do responsável. Será usado para entrar na plataforma.
+                    </p>
+                  </Field>
+
+                  <Field label="Senha temporária" htmlFor="password" required>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Crie uma senha segura"
+                        required
+                        disabled={isPending}
+                        className="pr-10"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showPassword
+                          ? <EyeOff className="h-4 w-4" />
+                          : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <PasswordStrength password={password} />
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      O aluno poderá alterar a senha depois do primeiro acesso.
+                    </p>
+                  </Field>
                 </div>
 
                 {error && (
@@ -236,7 +308,11 @@ export function NovoAlunoDialog() {
                   >
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={isPending} className="gap-2">
+                  <Button
+                    type="submit"
+                    disabled={isPending || (password.length > 0 && !isPasswordValid)}
+                    className="gap-2"
+                  >
                     {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                     {isPending ? "Criando…" : "Criar conta"}
                   </Button>

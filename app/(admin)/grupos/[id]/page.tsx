@@ -8,7 +8,8 @@ import { getGroupDetail } from "@/lib/data/groups";
 import { getGroupInvitations } from "@/lib/data/invitations";
 import { getPublishedPacksNotInGroup } from "@/lib/data/assignments";
 import { GroupActions } from "./group-actions";
-import { ArrowLeft, Users, BookOpen, Link2, Clock, CheckCircle2, XCircle, Ban } from "lucide-react";
+import { AssignedPacksPanel } from "./assigned-packs-panel";
+import { ArrowLeft, Users, Link2, Clock, CheckCircle2, XCircle, Ban } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const groupTypeLabels: Record<string, string> = {
@@ -107,37 +108,11 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
             </section>
 
             {/* Assigned packs */}
-            <section className="rounded-2xl border bg-white overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b">
-                <h2 className="font-semibold text-foreground flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  Pacotes atribuídos ({group.assignedPacks.length})
-                </h2>
-                {availablePacks.length > 0 && (
-                  <GroupActions groupId={group.id} type="assign_pack" availablePacks={availablePacks} />
-                )}
-              </div>
-              {group.assignedPacks.length === 0 ? (
-                <div className="px-5 py-8 text-center text-sm text-muted-foreground">
-                  Nenhum pacote atribuído ainda.
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {group.assignedPacks.map((pack) => (
-                    <div key={pack.id} className="flex items-center gap-3 px-5 py-3.5">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{pack.title}</p>
-                        <p className="text-xs text-muted-foreground">{pack.subject} · {pack.grade}</p>
-                      </div>
-                      <Link href={`/pacotes/${pack.id}`} className="text-xs text-primary hover:underline shrink-0">
-                        Ver pacote
-                      </Link>
-                      <GroupActions groupId={group.id} type="unassign_pack" packId={pack.id} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
+            <AssignedPacksPanel
+              groupId={group.id}
+              packs={group.assignedPacks}
+              availablePacks={availablePacks}
+            />
           </div>
 
           {/* Invitations panel */}

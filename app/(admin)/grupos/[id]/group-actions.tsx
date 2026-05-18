@@ -53,9 +53,24 @@ export function GroupActions(props: GroupActionsProps) {
                     <input readOnly value={newInviteLink}
                       className="flex-1 rounded-lg border bg-muted/40 px-3 py-2 text-xs font-mono" />
                     <Button size="sm" variant="outline" onClick={() => {
-                      navigator.clipboard.writeText(newInviteLink);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
+                      const el = document.createElement("textarea");
+                      el.value = newInviteLink;
+                      el.setAttribute("readonly", "");
+                      el.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;";
+                      document.body.appendChild(el);
+                      el.focus();
+                      el.select();
+                      const ok = document.execCommand("copy");
+                      document.body.removeChild(el);
+                      if (ok) {
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      } else {
+                        navigator.clipboard?.writeText(newInviteLink).then(() => {
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }).catch(() => {});
+                      }
                     }}>
                       {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                     </Button>
@@ -82,9 +97,38 @@ export function GroupActions(props: GroupActionsProps) {
   // ── Copy link ──────────────────────────────────────────────────────────────
   if (props.type === "copy_link") {
     const link = `${props.baseUrl}/convite/${props.token}`;
+
+    function copyToClipboard() {
+      // Always use execCommand — works in HTTP/dev and avoids permission issues
+      const el = document.createElement("textarea");
+      el.value = link;
+      el.setAttribute("readonly", "");
+      el.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;";
+      document.body.appendChild(el);
+      el.focus();
+      el.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(el);
+
+      if (ok) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        return;
+      }
+
+      // If execCommand fails, try Clipboard API
+      navigator.clipboard?.writeText(link).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(() => {
+        // Nothing we can do silently — user will need to copy manually
+        setCopied(false);
+      });
+    }
+
     return (
       <button
-        onClick={() => { navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+        onClick={copyToClipboard}
         className={cn("flex items-center gap-1 text-xs rounded-lg px-2 py-1 border transition-colors",
           copied ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-border hover:border-primary/40 text-muted-foreground")}
       >

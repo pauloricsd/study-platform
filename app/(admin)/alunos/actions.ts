@@ -21,22 +21,12 @@ function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function slugify(name: string): string {
-  return name
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ".")
-    .replace(/^\.+|\.+$/g, "");
-}
-
 function randomColor(): string {
   return AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 }
 
 export interface CreateStudentResult {
   error?: string;
-  /** The generated login hint shown to the admin after creation */
   loginEmail?: string;
 }
 
@@ -44,35 +34,41 @@ export async function createStudent(
   formData: FormData
 ): Promise<CreateStudentResult> {
   const name = (formData.get("name") as string | null)?.trim() ?? "";
+  const email = (formData.get("email") as string | null)?.trim() ?? "";
   const grade = (formData.get("grade") as string | null)?.trim() ?? "";
   const password = (formData.get("password") as string | null) ?? "";
+  const school = (formData.get("school") as string | null)?.trim() ?? "";
+  const birthdate = (formData.get("birthdate") as string | null)?.trim() ?? "";
 
   if (!name) return { error: "Nome é obrigatório." };
+  if (!email) return { error: "E-mail é obrigatório." };
   if (password.length < 6) return { error: "Senha precisa ter pelo menos 6 caracteres." };
+  if (!/[a-zA-ZÀ-ÿ]/.test(password)) return { error: "A senha deve conter pelo menos uma letra." };
+  if (!/[0-9]/.test(password)) return { error: "A senha deve conter pelo menos um número." };
 
   const supabase = createAdminClient();
 
-  // Build a fake-but-unique email so Supabase Auth is happy
-  const slug = slugify(name);
-  const suffix = Math.random().toString(36).slice(2, 7);
-  const email = `${slug}.${suffix}@sia.local`;
-
-  // 1. Create Auth user (no email confirmation required)
+  // 1. Create Auth user with the real email
   const { data: authData, error: authError } =
     await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // skip confirmation flow
+      email_confirm: true, // skip confirmation — admin is creating the account
     });
 
   if (authError || !authData.user) {
-    return { error: authError?.message ?? "Erro ao criar usuário." };
+    // Provide a friendlier message for duplicate email
+    const msg = authError?.message ?? "Erro ao criar usuário.";
+    if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("exists")) {
+      return { error: "Este e-mail já está cadastrado na plataforma." };
+    }
+    return { error: msg };
   }
 
   const userId = authData.user.id;
 
   // 2. Insert profile row
-  const { error: profileError } = await supabase.from("profiles").insert({
+  const profileInsert: Record<string, unknown> = {
     id: userId,
     role: "student",
     name,
@@ -80,7 +76,14 @@ export async function createStudent(
     avatar_initials: initials(name),
     avatar_color: randomColor(),
     can_switch_role: false,
-  } as never);
+  };
+
+  if (school) profileInsert.school = school;
+  if (birthdate) profileInsert.birthdate = birthdate;
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .insert(profileInsert as never);
 
   if (profileError) {
     // Best-effort cleanup of the auth user

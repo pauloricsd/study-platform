@@ -45,7 +45,7 @@ const studentNav: NavItem[] = [
   { href: "/estudar", label: "Início", icon: Home },
   { href: "/estudar/historico", label: "Revisão", icon: RotateCcw },
   { href: "/estudar/explorar", label: "Explorar", icon: Compass, badge: "Em breve", disabled: true },
-  { href: "/estudar/materiais", label: "Meus Materiais", icon: FileText, badge: "Em breve", disabled: true },
+  { href: "/estudar/materiais", label: "Meus Materiais", icon: FileText },
 ];
 
 const adminBottomNav: NavItem[] = [

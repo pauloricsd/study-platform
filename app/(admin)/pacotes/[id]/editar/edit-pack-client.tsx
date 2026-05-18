@@ -18,6 +18,7 @@ import {
   Loader2,
   Check,
   X,
+  Upload,
 } from "lucide-react";
 import {
   updatePackMeta,
@@ -30,6 +31,7 @@ import {
   deleteSection,
 } from "./actions";
 import { AiAssistantPanel } from "./ai-assistant-panel";
+import { UploadTopicDialog } from "./upload-topic-dialog";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -1001,6 +1003,8 @@ interface EditPackClientProps {
 }
 
 export function EditPackClient({ pack, topics, exercises }: EditPackClientProps) {
+  const [uploadOpen, setUploadOpen] = useState(false);
+
   const backLink = (
     <Link
       href={"/pacotes/" + pack.id}
@@ -1014,6 +1018,16 @@ export function EditPackClient({ pack, topics, exercises }: EditPackClientProps)
   return (
     <>
       <Topbar title="Editar pacote" action={backLink} />
+
+      <UploadTopicDialog
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        packId={pack.id}
+        subject={pack.subject}
+        grade={pack.grade}
+        examName={pack.examName ?? ""}
+        topics={topics}
+      />
 
       <main className="p-6 max-w-3xl mx-auto space-y-6">
         {/* Pack title + subject badge */}
@@ -1034,6 +1048,22 @@ export function EditPackClient({ pack, topics, exercises }: EditPackClientProps)
 
         {/* AI Assistant */}
         <AiAssistantPanel packId={pack.id} />
+
+        {/* Topics header + import button */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-foreground">
+            Tópicos ({topics.length})
+          </h3>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setUploadOpen(true)}
+          >
+            <Upload className="h-3.5 w-3.5" />
+            Importar PDF
+          </Button>
+        </div>
 
         {/* Topics */}
         {topics.length === 0 ? (

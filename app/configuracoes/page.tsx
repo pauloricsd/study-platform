@@ -9,18 +9,27 @@ export default async function ConfiguracoesPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("name, role, avatar_initials, avatar_color")
+    .select("name, role, avatar_initials, avatar_color, roles, cpf, birthdate")
     .eq("id", user.id)
     .single();
 
-  const name = profile?.name ?? user.user_metadata?.name ?? "Usuário";
+  const name     = profile?.name ?? user.user_metadata?.name ?? "Usuário";
   const initials = name.trim().split(/\s+/).map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
+
+  // Derive active roles — fall back to primary role for existing accounts
+  const primaryRole = profile?.role ?? "admin";
+  const roles: string[] = (profile?.roles as string[] | null)?.length
+    ? (profile.roles as string[])
+    : [primaryRole];
 
   return (
     <ConfiguracoesClient
       name={name}
       email={user.email ?? ""}
-      role={profile?.role ?? "admin"}
+      role={primaryRole}
+      roles={roles}
+      cpf={(profile?.cpf as string | null) ?? null}
+      birthdate={(profile?.birthdate as string | null) ?? null}
       initials={initials}
       color={profile?.avatar_color ?? null}
     />

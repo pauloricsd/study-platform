@@ -30,6 +30,7 @@ import {
   Download,
   Zap,
   Brain,
+  Plus,
 } from "lucide-react";
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -77,9 +78,14 @@ export default function NovoPacotePage() {
     examName: "",
     examDate: "",
   });
-  const [file, setFile] = useState<File | null>(null);
+
+  // Multi-file state
+  const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [processingStep, setProcessingStep] = useState(0);
+
+  // Processing state
+  const [processingStep,    setProcessingStep]    = useState(0);
+  const [currentFileIndex,  setCurrentFileIndex]  = useState(0);
 
   // Real processing state
   const [packId, setPackId] = useState<string | null>(null);
@@ -90,57 +96,79 @@ export default function NovoPacotePage() {
 
   const [feedbackMode, setFeedbackMode] = useState<"immediate" | "adaptive">("immediate");
 
-  // Topic review state (index-based to work with dynamically generated topics)
+  // Topic review state
   const [topicToggles, setTopicToggles] = useState<Record<number, boolean>>({});
   const [topicTitles, setTopicTitles] = useState<Record<number, string>>({});
   const [editingTopicIndex, setEditingTopicIndex] = useState<number | null>(null);
 
-  // Cosmetic processing animation (runs while real API call is in flight)
+  // Cosmetic processing animation — restarts each time currentFileIndex changes
   useEffect(() => {
-    if (step !== 3) {
-      setProcessingStep(0);
-      return;
-    }
+    if (step !== 3) { setProcessingStep(0); return; }
+    setProcessingStep(0);
     const timeouts: ReturnType<typeof setTimeout>[] = [];
     PROCESSING_STEPS.forEach((_, i) => {
       timeouts.push(setTimeout(() => setProcessingStep(i + 1), (i + 1) * 1400));
     });
     return () => timeouts.forEach(clearTimeout);
-  }, [step]);
+  }, [step, currentFileIndex]);
+
+  // ── File helpers ──────────────────────────────────────────────────────────
+  function addFiles(incoming: FileList | File[]) {
+    const pdfs = Array.from(incoming).filter((f) => f.type === "application/pdf");
+    setFiles((prev) => {
+      const existingNames = new Set(prev.map((f) => f.name));
+      return [...prev, ...pdfs.filter((f) => !existingNames.has(f.name))];
+    });
+  }
+
+  function removeFile(index: number) {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setIsDragging(false);
-    const dropped = e.dataTransfer.files[0];
-    if (dropped?.type === "application/pdf") setFile(dropped);
+    addFiles(e.dataTransfer.files);
   }
 
+  // ── Sequential processing ─────────────────────────────────────────────────
   async function handleStartProcessing() {
-    if (!file) return;
+    if (!files.length) return;
     setProcessError(null);
     setStep(3);
 
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("title", form.title);
-    fd.append("subject", form.subject);
-    fd.append("grade", form.grade);
-    fd.append("examName", form.examName);
-    fd.append("examDate", form.examDate);
-    fd.append("feedbackMode", feedbackMode);
+    let currentPackId: string | null = null;
+    const allTopics: GeneratedTopic[] = [];
 
-    const result = await processPackAction(fd);
+    for (let i = 0; i < files.length; i++) {
+      setCurrentFileIndex(i);
 
-    if ("error" in result) {
-      setProcessError(result.error);
-      setStep(2);
-      return;
+      const fd = new FormData();
+      fd.append("file", files[i]);
+      fd.append("title", form.title);
+      fd.append("subject", form.subject);
+      fd.append("grade", form.grade);
+      fd.append("examName", form.examName);
+      fd.append("examDate", form.examDate);
+      fd.append("feedbackMode", feedbackMode);
+      if (currentPackId) fd.append("packId", currentPackId);
+
+      const result = await processPackAction(fd);
+
+      if ("error" in result) {
+        setProcessError(`Arquivo "${files[i].name}": ${result.error}`);
+        setStep(2);
+        return;
+      }
+
+      currentPackId = result.packId;
+      allTopics.push(...result.topics);
     }
 
-    setPackId(result.packId);
-    setGeneratedTopics(result.topics);
-    setTopicToggles(Object.fromEntries(result.topics.map((_, i) => [i, true])));
-    setTopicTitles(Object.fromEntries(result.topics.map((t, i) => [i, t.title])));
+    setPackId(currentPackId);
+    setGeneratedTopics(allTopics);
+    setTopicToggles(Object.fromEntries(allTopics.map((_, i) => [i, true])));
+    setTopicTitles(Object.fromEntries(allTopics.map((t, i) => [i, t.title])));
     setStep(4);
   }
 
@@ -169,8 +197,9 @@ export default function NovoPacotePage() {
     router.push("/pacotes");
   }
 
-  const isStep1Valid = form.title.trim() && form.examName.trim();
+  const isStep1Valid      = form.title.trim() && form.examName.trim();
   const activeTopicsCount = Object.values(topicToggles).filter(Boolean).length;
+  const totalFilesMB      = files.reduce((s, f) => s + f.size, 0) / 1024 / 1024;
 
   return (
     <>
@@ -330,14 +359,14 @@ export default function NovoPacotePage() {
           </div>
         )}
 
-        {/* Step 2 — Upload */}
+        {/* Step 2 — Upload (multi-file) */}
         {step === 2 && (
           <div className="max-w-xl">
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-semibold">Material de estudo</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Envie o PDF com o conteúdo que será processado pela IA.
+                  Envie um ou mais PDFs. A IA processará cada um e combinará os tópicos gerados.
                 </p>
               </div>
               <a
@@ -357,49 +386,74 @@ export default function NovoPacotePage() {
               </div>
             )}
 
-            {!file ? (
-              <div
-                className={cn(
-                  "rounded-xl border-2 border-dashed bg-white transition-colors cursor-pointer p-14 flex flex-col items-center justify-center text-center gap-3",
-                  isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/30"
+            {/* Drop zone */}
+            <div
+              className={cn(
+                "rounded-xl border-2 border-dashed bg-white transition-colors cursor-pointer flex flex-col items-center justify-center text-center gap-3",
+                files.length > 0 ? "p-5" : "p-14",
+                isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/30"
+              )}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {files.length === 0 ? (
+                <>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                    <Upload className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Arraste PDFs aqui</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">ou clique para selecionar</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">PDF textual · máximo 20 MB por arquivo</p>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-primary font-medium">
+                  <Plus className="h-4 w-4" />
+                  Adicionar mais arquivos
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf"
+                multiple
+                className="hidden"
+                onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }}
+              />
+            </div>
+
+            {/* File list */}
+            {files.length > 0 && (
+              <div className="mt-3 rounded-xl border bg-white divide-y overflow-hidden">
+                {files.map((f, i) => (
+                  <div key={f.name} className="flex items-center gap-3 px-4 py-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50">
+                      <FileText className="h-4 w-4 text-red-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{f.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(f.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeFile(i); }}
+                      className="shrink-0 text-muted-foreground hover:text-destructive transition-colors p-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+                {/* Total */}
+                {files.length > 1 && (
+                  <div className="px-4 py-2 bg-muted/30 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{files.length} arquivos</span>
+                    <span>{totalFilesMB.toFixed(2)} MB no total</span>
+                  </div>
                 )}
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                  <Upload className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">Arraste um PDF aqui</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">ou clique para selecionar</p>
-                </div>
-                <p className="text-xs text-muted-foreground">PDF textual · máximo 20 MB</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }}
-                />
-              </div>
-            ) : (
-              <div className="rounded-xl border bg-white p-5">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-50">
-                    <FileText className="h-5 w-5 text-red-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{file.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB · PDF
-                    </p>
-                  </div>
-                  <button onClick={() => setFile(null)} className="text-muted-foreground hover:text-foreground transition-colors">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
               </div>
             )}
 
@@ -407,21 +461,42 @@ export default function NovoPacotePage() {
               <Button variant="ghost" size="sm" onClick={() => setStep(1)} className="gap-1.5">
                 <ArrowLeft className="h-4 w-4" /> Voltar
               </Button>
-              <Button onClick={handleStartProcessing} disabled={!file} className="gap-2">
-                <Sparkles className="h-4 w-4" /> Processar material
+              <Button onClick={handleStartProcessing} disabled={files.length === 0} className="gap-2">
+                <Sparkles className="h-4 w-4" />
+                {files.length > 1
+                  ? `Processar ${files.length} arquivos`
+                  : "Processar material"}
               </Button>
             </div>
           </div>
         )}
 
-        {/* Step 3 — Processing (animation + real API call in flight) */}
+        {/* Step 3 — Processing */}
         {step === 3 && (
           <div className="max-w-sm mx-auto pt-6 text-center">
             <div className="flex h-16 w-16 mx-auto mb-6 items-center justify-center rounded-full bg-primary/10">
               <Sparkles className="h-7 w-7 text-primary animate-pulse" />
             </div>
             <h2 className="text-xl font-semibold mb-1">Processando material</h2>
-            <p className="text-sm text-muted-foreground mb-8 truncate px-4">{form.title}</p>
+            {files.length > 1 ? (
+              <div className="mb-6 space-y-1">
+                <p className="text-sm font-medium text-foreground">
+                  Arquivo {currentFileIndex + 1} de {files.length}
+                </p>
+                <p className="text-xs text-muted-foreground truncate px-4">
+                  {files[currentFileIndex]?.name}
+                </p>
+                {/* Mini progress bar */}
+                <div className="mx-auto mt-2 h-1.5 w-48 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all duration-300"
+                    style={{ width: `${((currentFileIndex) / files.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground mb-8 truncate px-4">{form.title}</p>
+            )}
             <div className="space-y-2.5 text-left">
               {PROCESSING_STEPS.map((label, i) => {
                 const stepIndex = i + 1;
@@ -463,8 +538,10 @@ export default function NovoPacotePage() {
               <div>
                 <h2 className="text-xl font-semibold">Revisar tópicos gerados</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  A IA identificou {generatedTopics.length} tópicos. Revise, ajuste títulos
-                  e desmarque o que não for necessário.
+                  {files.length > 1
+                    ? `${files.length} arquivos processados — ${generatedTopics.length} tópicos identificados.`
+                    : `A IA identificou ${generatedTopics.length} tópicos.`}{" "}
+                  Revise, ajuste títulos e desmarque o que não for necessário.
                 </p>
               </div>
               <div className="flex flex-col items-end gap-0.5 shrink-0">
